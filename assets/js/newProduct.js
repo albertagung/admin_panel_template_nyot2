@@ -243,7 +243,10 @@ $(document).ready(() => {
 			// TODO: push each object into product variants database
 			// TODO: setelah itu id response.data.id setiap object
 			// harus di input ke productVariance product schema
-			console.log(objVariantSelections)
+			// Check if variant field has been filled
+			if (objVariantSelections.variantName) {
+				console.log(objVariantSelections)
+			}
 		}
 	}
 
