@@ -5,7 +5,7 @@ $(document).ready(() => {
 		let newPost = {
 			postTitle: $('#postTitle').val(),
 			postDescription: $('#postDescription').val(),
-			postContent: $('#postContent').val(),
+			postContent: $('#postContent').summernote('code'),
 			postAuthor: 'default',
 			createdAt: new Date(),
 			updatedAt: new Date()
@@ -21,6 +21,7 @@ $(document).ready(() => {
 		axios.post(urlNewPost, getValue())
 		.then((response) => {
 			console.log(response.data)
+			window.location = 'news.html'
 		})
 	})
 

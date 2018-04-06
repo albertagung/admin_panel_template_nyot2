@@ -14,7 +14,7 @@ $(document).ready(() => {
 		await $('#h3PostTitle').text(dataPost.postTitle)
 		await $('#postTitle').val(dataPost.postTitle)
 		await $('#postDescription').val(dataPost.postDescription)
-		$('#postContent').val(dataPost.postContent)
+		$('#m_summernote_1').summernote('code', dataPost.postContent)
 	})
 
 	// Get edited value
@@ -22,7 +22,7 @@ $(document).ready(() => {
 		let editedPost = {
 			postTitle: $('#postTitle').val(),
 			postDescription: $('#postDescription').val(),
-			postContent: $('#postContent').val(),
+			postContent: $('#m_summernote_1').summernote('code'),
 			postAuthor: 'default',
 			createdAt: new Date(),
 			updatedAt: new Date()
@@ -38,6 +38,7 @@ $(document).ready(() => {
 		axios.put(urlEditPost, getEdit())
 		.then((response) => {
 			console.log(response.data)
+			window.location = 'news.html'
 		})
 	})
 
