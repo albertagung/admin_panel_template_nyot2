@@ -37,18 +37,33 @@ Dropzone.options.mDropzoneTwo = {
   },
   init: () => {
   	// Add event listener on submit button to process queue manually
-  	// let btnSubmit = $('#btnSubmit')
-  	// mDropzoneTwo = Dropzone.forElement('.dropzone')
-  	// btnSubmit.click( async (e) => {
-  	// 	await e.preventDefault()
-  	// 	// Start the upload process
-  	// 	await mDropzoneTwo.processQueue()
-  	// 	// After upload finished call the rest of the object from newProduct script
-  	// 	// TODO: Setelah image masuk ke database, maka harus di panggil lagi
-  	// 	// dan dimasukkan ke product images
-  	// 	mDropzoneTwo.on('queuecomplete', () => {
-  	// 		console.log('selesai bos')
-  	// 	})
-  	// })
+  	let btnSubmit = $('#btnSubmit')
+  	mDropzoneTwo = Dropzone.forElement('.dropzone')
+  	btnSubmit.click( async (e) => {
+  		await e.preventDefault()
+  		// Start the upload process
+  		await mDropzoneTwo.processQueue()
+  		// After upload finished call the rest of the object from newProduct script
+  		// TODO: Setelah image masuk ke database, maka harus di panggil lagi
+  		// dan dimasukkan ke product images
+  		mDropzoneTwo.on('queuecomplete', () => {
+  			// Define url get image by section
+  			const urlGetImageBySection = 'http://localhost:3000/images/section'
+  			// Get the images
+  			axios.post(urlGetImageBySection, {imageSection: `product-${getProductSKUValue()}`})
+  			.then( async (response) => {
+  				console.log(response.data)
+  				// Define arr images
+  				let arrProductImages = []
+  				// Break down the images
+  				await response.data.forEach((dataImages) => {
+  					arrProductImages.push(dataImages._id)
+  				})
+  				// Get the combined object from newProduct script
+  				await getVariantSelectionsValue(arrProductImages)
+  				console.log('done bossdsasd')
+  			})
+  		})
+  	})
   }
 };

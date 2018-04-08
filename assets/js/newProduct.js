@@ -31,25 +31,19 @@ $(document).ready(() => {
 		return productType
 	}
 
-	// Get product category value
+	// Get product category data
 	getProductCategoryData = async () => {
-		// Define url get categories
-		const urlGetCategories = 'http://localhost:3000/categories'
 		// Get all categories
-		await axios.get(urlGetCategories).then((response) => {
-			// Set option for product category select
-	    $('#productCategory').select2({
-	        placeholder: "Add a tag",
-	        tags: true,
-	        allowClear: true
-	    })
-	    // Populate categories
-	    response.data.data.forEach((dataCategories) => {
-	    	$('#productCategory').append(`
-					<option value="${dataCategories.categoryName}">${dataCategories.categoryName}</option>
-	    	`)
-	    })
-		})
+		// Set option for product category select
+    $('#productCategory').select2({
+        placeholder: "Add a tag",
+        tags: true,
+        allowClear: true
+    })
+    // Populate categories
+  	$('#productCategory').append(`
+			<option value="No Category">No Category</option>
+  	`)
 		// Get product SKU data (waiting for category data to be finished)
 		getProductSKUData()
 	}
@@ -259,7 +253,7 @@ $(document).ready(() => {
 	        			return {
 		        			results: response.data.map((dataVariantName) => {
 		        				return {
-		        					id: dataVariantName._id,
+		        					id: dataVariantName.variantName,
 		        					text: dataVariantName.variantName
 		        				}
 		        			})
@@ -274,7 +268,7 @@ $(document).ready(() => {
 							dataVariance.variantOption.forEach((dataOption, i) => {
 								let arrDataOptions = []
 								let objDataOptions = {
-									id: i,
+									id: dataOption,
 									text: dataOption
 								}
 								arrDataOptions.push(objDataOptions)
@@ -336,7 +330,7 @@ $(document).ready(() => {
     			return {
       			results: response.data.map((dataVariantName) => {
       				return {
-      					id: dataVariantName._id,
+      					id: dataVariantName.variantName,
       					text: dataVariantName.variantName
       				}
       			})
@@ -349,9 +343,10 @@ $(document).ready(() => {
 		.then((response) => {
 			response.data.data.forEach((dataVariance) => {
 				dataVariance.variantOption.forEach((dataOption, i) => {
+					console.log(i)
 					let arrDataOptions = []
 					let objDataOptions = {
-						id: i,
+						id: dataOption,
 						text: dataOption
 					}
 					arrDataOptions.push(objDataOptions)
@@ -370,7 +365,7 @@ $(document).ready(() => {
 	})
 
 	// Get variant names and variant options value (object format)
-	getVariantSelectionsValue = () => {
+	getVariantSelectionsValue = (productImages) => {
 		let classVariantName = $('.classVariantName')
 		let classVariantOptions = $('.classVariantOptions')
 		let productVariance = []
@@ -385,7 +380,7 @@ $(document).ready(() => {
 			// Make each variant selection as an object
 			let objVariantSelections = {
 				variantName: $(`#${classVariantName[i].id}`).val(),
-				variantOptions: arrOptions,
+				variantOption: arrOptions,
 				createdAt: new Date(),
 				updatedAt: new Date()
 			}
@@ -394,21 +389,23 @@ $(document).ready(() => {
 			// harus di input ke productVariance product schema
 			// Check if variant field has been filled
 			if (objVariantSelections.variantName) {
-				console.log(objVariantSelections)
-				// // Define url insert new variance
-				// const urlInsertNewVariant = 'http://localhost:3000/variance'
-				// // Send data to variance database
-				// axios.post(urlInsertNewVariant, objVariantSelections)
-				// .then((response) => {
-				// 	let dataVariants = response.data[0]
-				// 	// Define arr for variants object id
-				// 	let arrVariants = []
-
-				// })
+				// Push productVariance to array
+				// Define url insert new variance
+				const urlInsertNewVariant = 'http://localhost:3000/variance'
+				// Send data to variance database
+				axios.post(urlInsertNewVariant, objVariantSelections)
+				.then((response) => {
+					let dataVariants = response.data
+					productVariance.push(dataVariants._id)
+				})
 			} else {
 				// do something if no variants filled
 			}
 		}
+		setTimeout(() => {
+			console.log(productVariance)
+			getCombinedForm(productVariance, productImages)
+		}, 2000)
 	}
 
 	// Onload
@@ -426,7 +423,8 @@ $(document).ready(() => {
 	getProductVariantsData()
 
 	// Combine form data as object
-	getCombinedForm = () => {
+	getCombinedForm = (productVariance, productImages) => {
+		// Define the object
 		let newProduct = {
 			productAvailability: getProductAvailabilityValue(),
 			productName: getProductNameValue(),
@@ -434,17 +432,29 @@ $(document).ready(() => {
 			productPrice: getProductPriceValue(),
 			productType: getProductTypeValue(),
 			productStockType: getProductStockTypeValue(),
-			productQty: getProductQtyValue()
+			productQty: getProductQtyValue(),
+			productVariance: productVariance,
+			productSKU: getProductSKUValue(),
+			productWeight: getProductWeightValue(),
+			productImages: productImages,
+			productShippingMethods: getProductShippingMethodValue(),
+			createdAt: new Date(),
+			updatedAt: new Date()
 		}
+		console.log(newProduct)
+		// Define url post new product
+		urlPostNewProduct = 'http://localhost:3000/products'
+		// Post new product
+		axios.post(urlPostNewProduct, newProduct)
+		.then((response) => {
+			return response.data
+		})
 	}
 
 	// On Submit (will be called in dropzoneNewProduct script)
-	$('#btnSubmit').click((e) => {
-		e.preventDefault()
-		getProductCategoryValue()
-		getVariantSelectionsValue()
-		console.log(getProductShippingMethodValue())
-		console.log(getProductAvailabilityValue())
-	})
+	// $('#btnSubmit').click( async (e) => {
+	// 	e.preventDefault()
+	// 	console.log(getVariantSelectionsValue())
+	// })
 
 })
