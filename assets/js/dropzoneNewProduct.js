@@ -1,4 +1,4 @@
-// Cannot inside document ready because options need to go at the beginning
+// Cannot inside document ready because dropzone options need to go at the beginning
 
 // Generate random id
 generateRandomId = () => {
@@ -30,17 +30,25 @@ Dropzone.options.mDropzoneTwo = {
   params: () => {
   	let imageData = {
   		'imageName': 'apa',
-  		'imageSection': 'product-11111'
+  		// Get product SKU value from newProduct script
+  		'imageSection': `product-${getProductSKUValue()}`
   	}
   	return imageData
   },
   init: () => {
   	// Add event listener on submit button to process queue manually
-  	let btnSubmit = $('#btnSubmit')
-  	mDropzoneTwo = Dropzone.forElement('.dropzone')
-  	btnSubmit.click((e) => {
-  		e.preventDefault()
-  		mDropzoneTwo.processQueue()
-  	})
+  	// let btnSubmit = $('#btnSubmit')
+  	// mDropzoneTwo = Dropzone.forElement('.dropzone')
+  	// btnSubmit.click( async (e) => {
+  	// 	await e.preventDefault()
+  	// 	// Start the upload process
+  	// 	await mDropzoneTwo.processQueue()
+  	// 	// After upload finished call the rest of the object from newProduct script
+  	// 	// TODO: Setelah image masuk ke database, maka harus di panggil lagi
+  	// 	// dan dimasukkan ke product images
+  	// 	mDropzoneTwo.on('queuecomplete', () => {
+  	// 		console.log('selesai bos')
+  	// 	})
+  	// })
   }
 };

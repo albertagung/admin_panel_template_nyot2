@@ -7,7 +7,7 @@ $(document).ready(() => {
 		for (let i = 0; i < 5; i++ ) {
 			randomId += possible.charAt(Math.floor(Math.random() * possible.length))
 		}
-		return randomId
+		return randomId.toUpperCase() // Make random ID uppercase
 	}
 
 	// Get product name value
@@ -32,22 +32,49 @@ $(document).ready(() => {
 	}
 
 	// Get product category value
+	getProductCategoryData = async () => {
+		// Define url get categories
+		const urlGetCategories = 'http://localhost:3000/categories'
+		// Get all categories
+		await axios.get(urlGetCategories).then((response) => {
+			// Set option for product category select
+	    $('#productCategory').select2({
+	        placeholder: "Add a tag",
+	        tags: true,
+	        allowClear: true
+	    })
+	    // Populate categories
+	    response.data.data.forEach((dataCategories) => {
+	    	$('#productCategory').append(`
+					<option value="${dataCategories.categoryName}">${dataCategories.categoryName}</option>
+	    	`)
+	    })
+		})
+		// Get product SKU data (waiting for category data to be finished)
+		getProductSKUData()
+	}
+
+	// Get product category value
 	getProductCategoryValue = () => {
-		// TODO: Get data product category from database
-		// Set option for product category select
-    $('#productCategory').select2({
-        placeholder: "Add a tag",
-        tags: true,
-        allowClear: true
-    })
-    .append(`
-			<option value="cat1">Dummy Cat 1</option>
-			<option value="cat2">Dummy Cat 2</option>
-			<option value="cat3">Dummy Cat 3</option>
-    `)
-    // Get value
+		// Get value
     let productCategory = $('#productCategory').val()
+    console.log(productCategory)
     return productCategory
+	}
+
+	// Get product SKU data
+	getProductSKUData = () => {
+		// Get initial selection based on product category
+		let catName = $('#productCategory').val().substr(0,3).toUpperCase()
+		$('#productSKU').val(`${catName}${generateRandomId()}`)
+		// Change SKU based on product category + random ID
+		$('#productCategory').change(() => {
+			// Check category not null
+			if ($('#productCategory').val()) {
+				let catName = $('#productCategory').val().substr(0,3).toUpperCase()
+				$('#productSKU').val(`${catName}${generateRandomId()}`)
+			}
+		})
 	}
 
 	// Get product SKU value
@@ -76,8 +103,8 @@ $(document).ready(() => {
 		return productPrice
 	}
 
-	// Get product availability bootstrap switch value
-	getProductAvailabilityValue = () => {
+	// Get product availability bootstrap switch data
+	getProductAvailabilityData = () => {
 		let productAvailability = ''
 		// BootstrapSwitch init for product availability
 		$('[id=productAvailability]').bootstrapSwitch({
@@ -90,12 +117,51 @@ $(document).ready(() => {
 		return productAvailability
 	}
 
+	// Get product availability value
+	getProductAvailabilityValue = () => {
+		// Get value
+		productAvailability = $('[id=productAvailability]').bootstrapSwitch('state')
+		// if value false = "Out of Stock", true = "Available"
+		if (productAvailability) {
+			return 'Available'
+		} else {
+			return 'Out of Stock'
+		}
+	}
+
+	// Get product stock type value
+	getProductStockTypeData = async () => {
+		// Define url get global settings
+		const urlGetGlobalSettings = 'http://localhost:3000/globalSetting'
+		// Populate the data
+		await axios.get(urlGetGlobalSettings).then((response) => {
+			let dataSettings = response.data[0]
+			// Change product stock type on product QTY change
+			$('#productQty').change(() => {
+				// Change product stock type based on how much the stock
+				// compared to the global settings
+				if ($('#productQty').val() >= dataSettings.stockAlert.highStock) {
+					$('#productStockType').val('High')
+					$('#productStockType').css('background-color', 'green')
+					.css('color', 'white')
+				} else if ($('#productQty').val() >= dataSettings.stockAlert.mediumStock) {
+					$('#productStockType').val('Medium')
+					$('#productStockType').css('background-color', 'yellow')
+					.css('color', 'black')
+				} else {
+					$('#productStockType').val('Low')
+					$('#productStockType').css('background-color', 'red')
+					.css('color', 'white')
+				}
+			})
+		})
+	}
+
 	// Get product stock type value
 	getProductStockTypeValue = () => {
 		// Get value
-		// TODO: Ambil data dari global settings
-		// user set stock trigger (low, medium, high) di angka berapa
-		// setelah itu baru dicocokkan dengan stock yang tersedia
+		let productStockType = $('#productStockType').val()
+		return productStockType
 	}
 
 	// Get product QTY value
@@ -106,17 +172,40 @@ $(document).ready(() => {
 	}
 
 	// Get shipping method
+	getProductShippingMethodData = () => {
+		// Define get global setting url
+		const urlGetGlobalSettings = 'http://localhost:3000/globalSetting'
+		// Get global settings data
+		axios.get(urlGetGlobalSettings).then((response) => {
+			let dataSettings = response.data[0]
+			dataSettings.shippingMethods.forEach((dataShipping) => {
+				// Set options for shipping method
+				$('#shippingMethod').append(`
+					<label class="m-checkbox">
+						<input name="method${dataShipping._id}" type="checkbox" value='${dataShipping._id}'>
+						${dataShipping.shippingName} - Price: ${dataShipping.shippingPrice} / Kg
+						<span></span>
+					</label>
+				`)
+			})
+		})
+	}
+
+	// Get shipping method value
 	getProductShippingMethodValue = () => {
-		// TODO: Ambil data shipping method dari global setting user
-		// Set options for shipping method
-		$('#shippingMethod').append(`
-			<option value="dummyShipping1">Dummy Shipping 1</option>
-			<option value="dummyShipping2">Dummy Shipping 2</option>
-			<option value="dummyShipping3">Dummy Shipping 3</option>
-		`)
+		// Define arr for the selected shipping methods
+		let arrShippingMethods = []
 		// Get value
-		let shippingMethod = $('#shippingMethod').val()
-		return shippingMethod
+		$('#shippingMethod input[type="checkbox"]:checked').each((i) => {
+			let shippingMethodObjectId = $('#shippingMethod input[type="checkbox"]:checked')[i].value
+			// Push into shippingMethods arr
+			arrShippingMethods.push(shippingMethodObjectId)
+		})
+		if (arrShippingMethods.length < 1) {
+			return 'No shipping method'
+		} else {
+			return arrShippingMethods
+		}
 	}
 
 	// Get product weight value
@@ -144,14 +233,14 @@ $(document).ready(() => {
 						<div class="row">
 							<div class="col-md">
 								<div class="form-group m-form__group">
-									<label for="variantName">Variant Name</label>
+									<label style="font-weight: bold" for="variantName">Variant Name</label>
 									<select class="form-control m-select2 classVariantName" id="variantName" name="variantName">
 									</select>
 								</div>
 							</div>
 							<div class="col-md">
 								<div class="form-group m-form__group">
-									<label for="variantName">Variant Options</label>
+									<label style="font-weight: bold" for="variantName">Variant Options</label>
 									<select class="form-control m-select2 classVariantOptions" id="variantOptions" multiple name="variantOptions">
 									</select>
 								</div>
@@ -187,21 +276,21 @@ $(document).ready(() => {
 			<div class="entry row" style="padding-bottom: 1em">
 				<div class="col-md-5">
 					<div class="form-group m-form__group">
-						<label for="variantName${generateRandomId()}">Variant Name</label>
+						<label style="font-weight: bold" for="variantName${generateRandomId()}">Variant Name</label>
 						<select class="form-control m-select2 classVariantName" id="variantName${generateRandomId()}" name="variantName${generateRandomId()}">
 						</select>
 					</div>
 				</div>
 				<div class="col-md-5">
 					<div class="form-group m-form__group">
-						<label for="variantOptions${generateRandomId()}">Variant Options</label>
+						<label style="font-weight: bold" for="variantOptions${generateRandomId()}">Variant Options</label>
 						<select class="form-control m-select2 classVariantOptions" id="variantOptions${generateRandomId()}" multiple name="variantOptions${generateRandomId()}">
 						</select>
 					</div>
 				</div>
 				<div class="col-md-2">
 					<div class="form-group m-form__group">
-						<label for="actions">Actions</label>
+						<label style="font-weight: bold" for="actions">Actions</label>
 						<a id="btnDeleteVariantSelections${generateRandomId()}" class="btn btn-danger classBtnDeleteVariantSelections">Delete</a>
 					</div>
 				</div>
@@ -251,18 +340,28 @@ $(document).ready(() => {
 	}
 
 
+	// Onload
+	// Get product type data
+	getProductTypeValue()
+	// Get product categories data
+	getProductCategoryData()
+	// Get product stock type data
+	getProductStockTypeData()
+	// Get product shipping method data
+	getProductShippingMethodData()
+
 	console.log(
-		getProductTypeValue(), 
-		getProductCategoryValue(), 
-		getProductVariantsValue(), 
-		getProductAvailabilityValue(),
-		getProductShippingMethodValue())
+		getProductVariantsValue(),
+		getProductAvailabilityData())
 
 
-	// On Submit
+	// On Submit (will be called in dropzoneNewProduct script)
 	$('#btnSubmit').click((e) => {
 		e.preventDefault()
+		getProductCategoryValue()
 		getVariantSelectionsValue()
+		console.log(getProductShippingMethodValue())
+		console.log(getProductAvailabilityValue())
 	})
 
 })
