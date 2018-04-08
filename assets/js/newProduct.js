@@ -215,8 +215,8 @@ $(document).ready(() => {
 		return productWeight
 	}
 
-	// Get product variants bootstrap switch value
-	getProductVariantsValue = () => {
+	// Get product variants bootstrap switch data
+	getProductVariantsData = () => {
 		// Hide the button add variant selectione
 		$('#btnAddVariantSelections').hide()
 		let productVariants = ''
@@ -251,11 +251,40 @@ $(document).ready(() => {
 					// Select2 variant name and variant options init (by class)
 					$('.classVariantName').select2({
 						placeholder: "Add a tag",
-		        tags: true
+		        tags: true,
+		        // Getting remote data from variance database
+		        ajax: {
+		        	url: 'http://localhost:3000/variance',
+		        	processResults: (response) => {
+	        			return {
+		        			results: response.data.map((dataVariantName) => {
+		        				return {
+		        					id: dataVariantName._id,
+		        					text: dataVariantName.variantName
+		        				}
+		        			})
+		        		}
+		        	}
+		        }
 					})
-					$('.classVariantOptions').select2({
-						placeholder: "Add a tag",
-		        tags: true
+					// Getting remote data from variance database
+					axios.get('http://localhost:3000/variance')
+					.then((response) => {
+						response.data.data.forEach((dataVariance) => {
+							dataVariance.variantOption.forEach((dataOption, i) => {
+								let arrDataOptions = []
+								let objDataOptions = {
+									id: i,
+									text: dataOption
+								}
+								arrDataOptions.push(objDataOptions)
+								$('.classVariantOptions').select2({
+									placeholder: "Add a tag",
+					        tags: true,
+					        data: arrDataOptions
+								})
+							})
+						})
 					})
 				} else {
 					// Make empty when productVariants is "false"
@@ -299,13 +328,42 @@ $(document).ready(() => {
 		// Select2 variant name and variant options init (by class)
 		$('.classVariantName').select2({
 			placeholder: "Add a tag",
-      tags: true
+      tags: true,
+      // Getting remote data from variance database
+      ajax: {
+      	url: 'http://localhost:3000/variance',
+      	processResults: (response) => {
+    			return {
+      			results: response.data.map((dataVariantName) => {
+      				return {
+      					id: dataVariantName._id,
+      					text: dataVariantName.variantName
+      				}
+      			})
+      		}
+      	}
+      }
 		})
-		$('.classVariantOptions').select2({
-			placeholder: "Add a tag",
-      tags: true
+		// Getting remote data from variance database
+		axios.get('http://localhost:3000/variance')
+		.then((response) => {
+			response.data.data.forEach((dataVariance) => {
+				dataVariance.variantOption.forEach((dataOption, i) => {
+					let arrDataOptions = []
+					let objDataOptions = {
+						id: i,
+						text: dataOption
+					}
+					arrDataOptions.push(objDataOptions)
+					$('.classVariantOptions').select2({
+						placeholder: "Add a tag",
+		        tags: true,
+		        data: arrDataOptions
+					})
+				})
+			})
 		})
-		// Delete variant selections (using e.target to know which on is clicked)
+		// Delete variant selections (using e.target to know which one clicked)
 		$('.classBtnDeleteVariantSelections').click((e) => {
 			$(`#${e.target.id}`).parents('.entry').remove()
 		})
@@ -327,7 +385,9 @@ $(document).ready(() => {
 			// Make each variant selection as an object
 			let objVariantSelections = {
 				variantName: $(`#${classVariantName[i].id}`).val(),
-				variantOptions: arrOptions
+				variantOptions: arrOptions,
+				createdAt: new Date(),
+				updatedAt: new Date()
 			}
 			// TODO: push each object into product variants database
 			// TODO: setelah itu id response.data.id setiap object
@@ -335,25 +395,48 @@ $(document).ready(() => {
 			// Check if variant field has been filled
 			if (objVariantSelections.variantName) {
 				console.log(objVariantSelections)
+				// // Define url insert new variance
+				// const urlInsertNewVariant = 'http://localhost:3000/variance'
+				// // Send data to variance database
+				// axios.post(urlInsertNewVariant, objVariantSelections)
+				// .then((response) => {
+				// 	let dataVariants = response.data[0]
+				// 	// Define arr for variants object id
+				// 	let arrVariants = []
+
+				// })
+			} else {
+				// do something if no variants filled
 			}
 		}
 	}
-
 
 	// Onload
 	// Get product type data
 	getProductTypeValue()
 	// Get product categories data
 	getProductCategoryData()
+	// Get product availability data
+	getProductAvailabilityData()
 	// Get product stock type data
 	getProductStockTypeData()
 	// Get product shipping method data
 	getProductShippingMethodData()
+	// get product variants data
+	getProductVariantsData()
 
-	console.log(
-		getProductVariantsValue(),
-		getProductAvailabilityData())
-
+	// Combine form data as object
+	getCombinedForm = () => {
+		let newProduct = {
+			productAvailability: getProductAvailabilityValue(),
+			productName: getProductNameValue(),
+			productCategory: getProductCategoryValue(),
+			productPrice: getProductPriceValue(),
+			productType: getProductTypeValue(),
+			productStockType: getProductStockTypeValue(),
+			productQty: getProductQtyValue()
+		}
+	}
 
 	// On Submit (will be called in dropzoneNewProduct script)
 	$('#btnSubmit').click((e) => {
