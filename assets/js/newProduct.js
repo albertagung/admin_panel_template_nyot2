@@ -17,43 +17,81 @@ $(document).ready(() => {
 		return productName
 	}
 
-	// Get product type value
-	getProductTypeValue = () => {
+	// Get product type data
+	getProductTypeData = () => {
 		// Set option for product type select
 		$('#productType').append(`
-			<option value="noType" selected>None</option>
-			<option value="newArrival">New Arrival</option>
-			<option value="sale">Sale</option>
-			<option value="bestSeller">Best Seller</option>
+			<option value="None" selected>None</option>
+			<option value="New Arrival">New Arrival</option>
+			<option value="Sale">Sale</option>
+			<option value="Best Seller">Best Seller</option>
 		`)
+	}
+
+	// Get product type value
+	getProductTypeValue = () => {
 		// Get the value
 		let productType = $('#productType').val()
 		return productType
 	}
 
 	// Get product category data
-	getProductCategoryData = async () => {
-		// Get all categories
-		// Set option for product category select
-    $('#productCategory').select2({
-        placeholder: "Add a tag",
-        tags: true,
-        allowClear: true
-    })
-    // Populate categories
-  	$('#productCategory').append(`
-			<option value="No Category">No Category</option>
-  	`)
-		// Get product SKU data (waiting for category data to be finished)
-		getProductSKUData()
+	getProductCategoryData = () => {
+		return new Promise ((resolve, reject) => {
+			// Get all categories
+			// Define url get categories
+			const urlGetCategories = 'http://localhost:3000/categories'
+			// Get categories from database
+			resolve(axios.get(urlGetCategories).then((response) => {
+				response.data.data.forEach((dataCategories) => {
+					// Set option for product category select
+			    $('#productCategory').select2({
+			        placeholder: "Add a tag",
+			        tags: true,
+			        allowClear: true
+			    })
+			    // Populate categories
+			  	$('#productCategory').append(`
+						<option value="${dataCategories.categoryName}">${dataCategories.categoryName}</option>
+			  	`)
+				})
+			}))
+		})
+		.then(() => {
+			// Wait until catagories population finished
+			getProductSKUData()
+		})
 	}
 
 	// Get product category value
 	getProductCategoryValue = () => {
 		// Get value
     let productCategory = $('#productCategory').val()
-    console.log(productCategory)
     return productCategory
+	}
+
+	// Send new category to category DB
+	sendNewProductCategory = (productId) => {
+		// Return promise to send axios request to DB
+		return new Promise ((resolve, reject) => {
+			// Define url post new category
+			const urlPostNewCategory = 'http://localhost:3000/categories'
+			// Define obj new category
+			let newCategory = {
+				categoryName: $('#productCategory').val(),
+				categoryProducts: productId,
+				createdAt: new Date(),
+				updatedAt: new Date()
+			}
+			// Send new catagory to category DB
+			axios.post(urlPostNewCategory, newCategory)
+			.then((response) => {
+				resolve(response.data)
+			})
+		})
+		.then((dataNewCategory) => {
+			console.log(dataNewCategory)
+		})
 	}
 
 	// Get product SKU data
@@ -81,7 +119,7 @@ $(document).ready(() => {
 	// Get product description value
 	getProductDescriptionValue = () => {
 		// Get value
-		let productDescription = $('#postContent').summernote('code')
+		let productDescription = $('#productDescription').summernote('code')
 		return productDescription
 	}
 
@@ -420,7 +458,7 @@ $(document).ready(() => {
 
 	// Onload
 	// Get product type data
-	getProductTypeValue()
+	getProductTypeData()
 	// Get product categories data
 	getProductCategoryData()
 	// Get product availability data
@@ -463,7 +501,10 @@ $(document).ready(() => {
 				// Post new product
 				axios.post(urlPostNewProduct, newProduct)
 				.then((response) => {
-					return response.data
+					// TODO: Send new product category to DB
+					// Define product ID
+					let productId = response.data._id
+					sendNewProductCategory(productId)
 				})
 			})
 		})

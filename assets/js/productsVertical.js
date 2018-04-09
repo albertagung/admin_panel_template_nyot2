@@ -46,7 +46,7 @@ var DefaultDatatableDemo = function () {
 				field: "productName",
 				title: "Name"
 			}, {
-				field: "productCategory.categoryName",
+				field: "productCategory",
 				title: "Category"
 			}, {
 				field: "productPrice",
