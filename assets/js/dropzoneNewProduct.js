@@ -60,7 +60,7 @@ Dropzone.options.mDropzoneTwo = {
   					arrProductImages.push(dataImages._id)
   				})
   				// Get the combined object from newProduct script
-  				await getVariantSelectionsValue(arrProductImages)
+  				await getCombinedForm(arrProductImages)
   				console.log('done bossdsasd')
   			})
   		})

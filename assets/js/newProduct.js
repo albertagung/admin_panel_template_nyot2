@@ -343,7 +343,6 @@ $(document).ready(() => {
 		.then((response) => {
 			response.data.data.forEach((dataVariance) => {
 				dataVariance.variantOption.forEach((dataOption, i) => {
-					console.log(i)
 					let arrDataOptions = []
 					let objDataOptions = {
 						id: dataOption,
@@ -365,47 +364,58 @@ $(document).ready(() => {
 	})
 
 	// Get variant names and variant options value (object format)
+	// Function ini dipanggil di dropzoneNewProduct script
 	getVariantSelectionsValue = (productImages) => {
 		let classVariantName = $('.classVariantName')
 		let classVariantOptions = $('.classVariantOptions')
 		let productVariance = []
-		for (let i = 0; i < classVariantName.length; i++) {
-			// Define arr options for data.text
-			let arrOptions = []
-			// Breaking down the array of object to get just the text
-			$(`#${classVariantOptions[i].id}`).select2('data').forEach((dataOptions) => {
-				// Push the text into arr options
-				arrOptions.push(dataOptions.text)
-			})
-			// Make each variant selection as an object
-			let objVariantSelections = {
-				variantName: $(`#${classVariantName[i].id}`).val(),
-				variantOption: arrOptions,
-				createdAt: new Date(),
-				updatedAt: new Date()
+		let productVarianceById = []
+		console.log('masuk')
+		return new Promise ((resolve, reject) => {
+			for (let i = 0; i < classVariantName.length; i++) {
+				// Define arr options for data.text
+				let arrOptions = []
+				// Breaking down the array of object to get just the text
+				$(`#${classVariantOptions[i].id}`).select2('data').forEach((dataOptions) => {
+					// Push the text into arr options
+					arrOptions.push(dataOptions.text)
+				})
+				// Make each variant selection as an object
+				let objVariantSelections = {
+					variantName: $(`#${classVariantName[i].id}`).val(),
+					variantOption: arrOptions,
+					createdAt: new Date(),
+					updatedAt: new Date()
+				}
+				// TODO: push each object into product variants database
+				// TODO: setelah itu id response.data.id setiap object
+				// harus di input ke productVariance product schema
+				// Check if variant field has been filled
+				if (objVariantSelections.variantName) {
+					// Push productVariance to array
+					resolve(productVariance.push(objVariantSelections))
+				} else {
+					// do something if no variants filled
+					// TODO: Validation when no variants is filled
+					resolve('takada')
+				}
 			}
-			// TODO: push each object into product variants database
-			// TODO: setelah itu id response.data.id setiap object
-			// harus di input ke productVariance product schema
-			// Check if variant field has been filled
-			if (objVariantSelections.variantName) {
-				// Push productVariance to array
+		})
+		.then(() => {
+			return new Promise ((resolve, reject) => {
 				// Define url insert new variance
 				const urlInsertNewVariant = 'http://localhost:3000/variance'
 				// Send data to variance database
-				axios.post(urlInsertNewVariant, objVariantSelections)
+				axios.post(urlInsertNewVariant, productVariance)
 				.then((response) => {
 					let dataVariants = response.data
-					productVariance.push(dataVariants._id)
+					resolve(dataVariants)
 				})
-			} else {
-				// do something if no variants filled
-			}
-		}
-		setTimeout(() => {
-			console.log(productVariance)
-			getCombinedForm(productVariance, productImages)
-		}, 2000)
+			})
+			.then((dataVariants) => {
+				return dataVariants
+			})
+		})
 	}
 
 	// Onload
@@ -423,38 +433,45 @@ $(document).ready(() => {
 	getProductVariantsData()
 
 	// Combine form data as object
-	getCombinedForm = (productVariance, productImages) => {
-		// Define the object
-		let newProduct = {
-			productAvailability: getProductAvailabilityValue(),
-			productName: getProductNameValue(),
-			productCategory: getProductCategoryValue(),
-			productPrice: getProductPriceValue(),
-			productType: getProductTypeValue(),
-			productStockType: getProductStockTypeValue(),
-			productQty: getProductQtyValue(),
-			productVariance: productVariance,
-			productSKU: getProductSKUValue(),
-			productWeight: getProductWeightValue(),
-			productImages: productImages,
-			productShippingMethods: getProductShippingMethodValue(),
-			createdAt: new Date(),
-			updatedAt: new Date()
-		}
-		console.log(newProduct)
-		// Define url post new product
-		urlPostNewProduct = 'http://localhost:3000/products'
-		// Post new product
-		axios.post(urlPostNewProduct, newProduct)
-		.then((response) => {
-			return response.data
+	getCombinedForm = (productImages) => {
+		// Using promise to get dataVariants
+		getVariantSelectionsValue().then((dataVariants) => {
+			// Define the object
+			return new Promise ((resolve, reject) => {
+				let newProduct = {
+					productAvailability: getProductAvailabilityValue(),
+					productName: getProductNameValue(),
+					productCategory: getProductCategoryValue(),
+					productDescription: getProductDescriptionValue(),
+					productPrice: getProductPriceValue(),
+					productType: getProductTypeValue(),
+					productStockType: getProductStockTypeValue(),
+					productQty: getProductQtyValue(),
+					productVariance: dataVariants,
+					productSKU: getProductSKUValue(),
+					productWeight: getProductWeightValue(),
+					productImages: productImages,
+					productShippingMethods: getProductShippingMethodValue(),
+					createdAt: new Date(),
+					updatedAt: new Date()
+				}
+				resolve(newProduct)
+			})
+			.then((newProduct) => {
+				// Define url post new product
+				urlPostNewProduct = 'http://localhost:3000/products'
+				// Post new product
+				axios.post(urlPostNewProduct, newProduct)
+				.then((response) => {
+					return response.data
+				})
+			})
 		})
 	}
 
-	// On Submit (will be called in dropzoneNewProduct script)
-	// $('#btnSubmit').click( async (e) => {
+	// $('#btnSubmit').click((e) => {
 	// 	e.preventDefault()
-	// 	console.log(getVariantSelectionsValue())
+	// 	getCombinedForm()
 	// })
 
 })
