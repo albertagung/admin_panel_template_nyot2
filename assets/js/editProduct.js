@@ -12,6 +12,7 @@ $(document).ready(() => {
 
 	// Populate data on forms
 	populateData = () => {
+		$('body').loading('start')
 		// TODO: LOADER = START
 		// Get product id
 		let productId = localStorage.getItem('productId')
@@ -53,6 +54,7 @@ $(document).ready(() => {
 			// Populate product variants field
 			getProductVariantsData(dataProduct.productVariance)
 			// TODO: LOADER = STOP
+			$('body').loading('stop')
 		})
 	}
 
@@ -589,7 +591,6 @@ $(document).ready(() => {
 			}
 		})
 		.then((response) => {
-			console.log('masuk then')
 			if (response !== 'variant option unchecked') {
 				return new Promise ((resolve, reject) => {
 					// Define url insert new variance

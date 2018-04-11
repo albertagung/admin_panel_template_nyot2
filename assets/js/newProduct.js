@@ -408,46 +408,56 @@ $(document).ready(() => {
 		let productVariance = []
 		let productVarianceById = []
 		return new Promise ((resolve, reject) => {
-			for (let i = 0; i < classVariantName.length; i++) {
-				// Define arr options for data.text
-				let arrOptions = []
-				// Breaking down the array of object to get just the text
-				$(`#${classVariantOptions[i].id}`).select2('data').forEach((dataOptions) => {
-					// Push the text into arr options
-					arrOptions.push(dataOptions.text)
-				})
-				// Make each variant selection as an object
-				let objVariantSelections = {
-					variantName: $(`#${classVariantName[i].id}`).val(),
-					variantOption: arrOptions,
-					createdAt: new Date(),
-					updatedAt: new Date()
-				}
-				// Check if variant field has been filled
-				if (objVariantSelections.variantName) {
-					// Push productVariance to array
-					resolve(productVariance.push(objVariantSelections))
+			// Check if add variants is checked or not
+			if (classVariantName.length > 0) {
+				for (let i = 0; i < classVariantName.length; i++) {
+					// Define arr options for data.text
+					let arrOptions = []
+					// Breaking down the array of object to get just the text
+					$(`#${classVariantOptions[i].id}`).select2('data').forEach((dataOptions) => {
+						// Push the text into arr options
+						arrOptions.push(dataOptions.text)
+					})
+					// Make each variant selection as an object
+					let objVariantSelections = {
+						variantName: $(`#${classVariantName[i].id}`).val(),
+						variantOption: arrOptions,
+						createdAt: new Date(),
+						updatedAt: new Date()
+					}
+					// Check if variant field has been filled
+					if (objVariantSelections.variantName) {
+						// Push productVariance to array
+						resolve(productVariance.push(objVariantSelections))
+					} else {
+						// do something if no variants filled
+						// TODO: Validation when no variants is filled
+						resolve('takada')
+					}
 				} else {
-					// do something if no variants filled
-					// TODO: Validation when no variants is filled
-					resolve('takada')
+					// If not, then just resolve empty and proceed to then
+					resolve('variant option unchecked')
 				}
 			}
 		})
 		.then(() => {
-			return new Promise ((resolve, reject) => {
-				// Define url insert new variance
-				const urlInsertNewVariant = 'http://localhost:3000/variance'
-				// Send data to variance database
-				axios.post(urlInsertNewVariant, productVariance)
-				.then((response) => {
-					let dataVariants = response.data
-					resolve(dataVariants)
+			if (response !== 'variant option unchecked') {
+				return new Promise ((resolve, reject) => {
+					// Define url insert new variance
+					const urlInsertNewVariant = 'http://localhost:3000/variance'
+					// Send data to variance database
+					axios.post(urlInsertNewVariant, productVariance)
+					.then((response) => {
+						let dataVariants = response.data
+						resolve(dataVariants)
+					})
 				})
-			})
-			.then((dataVariants) => {
-				return dataVariants
-			})
+				.then((dataVariants) => {
+					return dataVariants
+				})
+			} else {
+				return false
+			}
 		})
 	}
 
@@ -470,38 +480,74 @@ $(document).ready(() => {
 	getCombinedForm = (productImages) => {
 		// Using promise to get dataVariants
 		getVariantSelectionsValue().then((dataVariants) => {
-			// Define the object
-			return new Promise ((resolve, reject) => {
-				let newProduct = {
-					productAvailability: getProductAvailabilityValue(),
-					productName: getProductNameValue(),
-					productCategory: getProductCategoryValue(),
-					productDescription: getProductDescriptionValue(),
-					productPrice: getProductPriceValue(),
-					productType: getProductTypeValue(),
-					productStockType: getProductStockTypeValue(),
-					productQty: getProductQtyValue(),
-					productVariance: dataVariants,
-					productSKU: getProductSKUValue(),
-					productWeight: getProductWeightValue(),
-					productImages: productImages,
-					productShippingMethods: getProductShippingMethodValue(),
-					createdAt: new Date(),
-					updatedAt: new Date()
-				}
-				resolve(newProduct)
-			})
-			.then((newProduct) => {
-				// Define url post new product
-				urlPostNewProduct = 'http://localhost:3000/products'
-				// Post new product
-				axios.post(urlPostNewProduct, newProduct)
-				.then((response) => {
-					// Define product ID
-					let productId = response.data._id
-					sendNewProductCategory(productId)
+			if (dataVariants) {
+				// Define the object
+				return new Promise ((resolve, reject) => {
+					let newProduct = {
+						productAvailability: getProductAvailabilityValue(),
+						productName: getProductNameValue(),
+						productCategory: getProductCategoryValue(),
+						productDescription: getProductDescriptionValue(),
+						productPrice: getProductPriceValue(),
+						productType: getProductTypeValue(),
+						productStockType: getProductStockTypeValue(),
+						productQty: getProductQtyValue(),
+						productVariance: dataVariants,
+						productSKU: getProductSKUValue(),
+						productWeight: getProductWeightValue(),
+						productImages: productImages,
+						productShippingMethods: getProductShippingMethodValue(),
+						createdAt: new Date(),
+						updatedAt: new Date()
+					}
+					resolve(newProduct)
 				})
-			})
+				.then((newProduct) => {
+					// Define url post new product
+					urlPostNewProduct = 'http://localhost:3000/products'
+					// Post new product
+					axios.post(urlPostNewProduct, newProduct)
+					.then((response) => {
+						// Define product ID
+						let productId = response.data._id
+						sendNewProductCategory(productId)
+					})
+				})
+			} else {
+				// If there are no data variants, then put empty array
+				// Define the object
+				return new Promise ((resolve, reject) => {
+					let newProduct = {
+						productAvailability: getProductAvailabilityValue(),
+						productName: getProductNameValue(),
+						productCategory: getProductCategoryValue(),
+						productDescription: getProductDescriptionValue(),
+						productPrice: getProductPriceValue(),
+						productType: getProductTypeValue(),
+						productStockType: getProductStockTypeValue(),
+						productQty: getProductQtyValue(),
+						productVariance: [],
+						productSKU: getProductSKUValue(),
+						productWeight: getProductWeightValue(),
+						productImages: productImages,
+						productShippingMethods: getProductShippingMethodValue(),
+						createdAt: new Date(),
+						updatedAt: new Date()
+					}
+					resolve(newProduct)
+				})
+				.then((newProduct) => {
+					// Define url post new product
+					urlPostNewProduct = 'http://localhost:3000/products'
+					// Post new product
+					axios.post(urlPostNewProduct, newProduct)
+					.then((response) => {
+						// Define product ID
+						let productId = response.data._id
+						sendNewProductCategory(productId)
+					})
+				})
+			}
 		})
 	}
 
