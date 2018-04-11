@@ -29,7 +29,7 @@ $(document).ready(() => {
 			getProductTypeData()
 			$('#productType').val(dataProduct.productType)
 			// Populate product category field
-			getProductCategoryData()
+			getProductCategoryData(dataProduct.productCategory)
 			$('#productCategory').val(dataProduct.productCategory)
 			// Populate product SKU field
 			$('#productSKU').val(dataProduct.productSKU)
@@ -68,7 +68,7 @@ $(document).ready(() => {
 	}
 
 	// Get product category data
-	getProductCategoryData = () => {
+	getProductCategoryData = (previousCategory) => {
 		return new Promise ((resolve, reject) => {
 			// Get all categories
 			// Define url get categories
@@ -83,9 +83,17 @@ $(document).ready(() => {
 			        allowClear: true
 			    })
 			    // Populate categories
-			  	$('#productCategory').append(`
-						<option value="${dataCategories.categoryName}">${dataCategories.categoryName}</option>
-			  	`)
+			    // If product category from db === previous category add selected attr
+			    if (dataCategories.categoryName === previousCategory) {
+			    	$('#productCategory').append(`
+							<option value="${dataCategories.categoryName}" selected>${dataCategories.categoryName}</option>
+				  	`)
+			    } else {
+			    	// If not, then dont add attribute
+			    	$('#productCategory').append(`
+							<option value="${dataCategories.categoryName}">${dataCategories.categoryName}</option>
+				  	`)
+			    }
 				})
 			}))
 		})
@@ -135,8 +143,6 @@ $(document).ready(() => {
 							swal("Your file is save")
 						}
 					})
-					// TODO: Nanti di delete beneran dari database images
-					// TODO: Tambahin swal saat mau ngedelete image --> "are you sure bla blabla"
 				})
 			})
 		})
@@ -459,6 +465,7 @@ $(document).ready(() => {
 				createdAt: new Date(),
 				updatedAt: new Date()
 			}
+			console.log(newCategory)
 			// Send new catagory to category DB
 			axios.post(urlPostNewCategory, newCategory)
 			.then((response) => {
@@ -548,51 +555,214 @@ $(document).ready(() => {
 		let productVariance = []
 		let productVarianceById = []
 		return new Promise ((resolve, reject) => {
-			for (let i = 0; i < classVariantName.length; i++) {
-				// Define arr options for data.text
-				let arrOptions = []
-				// Breaking down the array of object to get just the text
-				$(`#${classVariantOptions[i].id}`).select2('data').forEach((dataOptions) => {
-					// Push the text into arr options
-					arrOptions.push(dataOptions.text)
-				})
-				// Make each variant selection as an object
-				let objVariantSelections = {
-					variantName: $(`#${classVariantName[i].id}`).val(),
-					variantOption: arrOptions,
-					createdAt: new Date(),
-					updatedAt: new Date()
+			// Check if add variants is checked or not
+			if (classVariantName.length > 0) {
+				// if checked, then proceed to process the variants
+				for (let i = 0; i < classVariantName.length; i++) {
+					// Define arr options for data.text
+					let arrOptions = []
+					// Breaking down the array of object to get just the text
+					$(`#${classVariantOptions[i].id}`).select2('data').forEach((dataOptions) => {
+						// Push the text into arr options
+						arrOptions.push(dataOptions.text)
+					})
+					// Make each variant selection as an object
+					let objVariantSelections = {
+						variantName: $(`#${classVariantName[i].id}`).val(),
+						variantOption: arrOptions,
+						createdAt: new Date(),
+						updatedAt: new Date()
+					}
+					// Check if variant field has been filled
+					if (objVariantSelections.variantName) {
+						// Push productVariance to array
+						resolve(productVariance.push(objVariantSelections))
+					} else {
+						// do something if no variants filled
+						// TODO: Validation when no variants is filled
+						resolve('no variants')
+					}
 				}
-				// Check if variant field has been filled
-				if (objVariantSelections.variantName) {
-					// Push productVariance to array
-					resolve(productVariance.push(objVariantSelections))
-				} else {
-					// do something if no variants filled
-					// TODO: Validation when no variants is filled
-					resolve('takada')
-				}
+			} else {
+				// If not, then just resolve empty and proceed to then
+				resolve('variant option unchecked')
 			}
 		})
-		.then(() => {
-			return new Promise ((resolve, reject) => {
-				// Define url insert new variance
-				const urlInsertNewVariant = 'http://localhost:3000/variance'
-				// Send data to variance database
-				axios.post(urlInsertNewVariant, productVariance)
-				.then((response) => {
-					let dataVariants = response.data
-					resolve(dataVariants)
+		.then((response) => {
+			console.log('masuk then')
+			if (response !== 'variant option unchecked') {
+				return new Promise ((resolve, reject) => {
+					// Define url insert new variance
+					const urlInsertNewVariant = 'http://localhost:3000/variance'
+					// Send data to variance database
+					axios.post(urlInsertNewVariant, productVariance)
+					.then((response) => {
+						let dataVariants = response.data
+						resolve(dataVariants)
+					})
 				})
-			})
-			.then((dataVariants) => {
-				return dataVariants
-			})
+				.then((dataVariants) => {
+					return dataVariants
+				})
+			} else {
+				return false
+			}
+		})
+	}
+
+	// Combine form data as object
+	getCombinedForm = (productImages) => {
+		// Get product id
+		let productId = localStorage.getItem('productId')
+		// Using promise to get dataVariants
+		getVariantSelectionsValue().then((dataVariants) => {
+			if (dataVariants) {
+				// Getting previous product data to populate unchanged item
+				// Define url get product by product id
+				const urlGetProductById = `http://localhost:3000/products/${productId}`
+				// Get the product
+				axios.get(urlGetProductById).then((response) => {
+					// Define the object
+					return new Promise ((resolve, reject) => {
+						let newProduct = {
+							productAvailability: getProductAvailabilityValue(),
+							productName: getProductNameValue(),
+							productCategory: getProductCategoryValue(),
+							productDescription: getProductDescriptionValue(),
+							productPrice: getProductPriceValue(),
+							productType: getProductTypeValue(),
+							productStockType: getProductStockTypeValue(),
+							productQty: getProductQtyValue(),
+							productVariance: dataVariants,
+							productSKU: getProductSKUValue(),
+							productWeight: getProductWeightValue(),
+							productImages: productImages,
+							productShippingMethods: getProductShippingMethodValue(),
+							createdAt: response.data[0].createdAt,
+							updatedAt: new Date()
+						}
+						resolve(newProduct)
+					})
+					.then((newProduct) => {
+						// Define url post edit product
+						urlPostEditProduct = `http://localhost:3000/products/edit/${productId}`
+						// Post new product
+						axios.put(urlPostEditProduct, newProduct)
+						.then((response) => {
+							// Define product ID
+							let productId = response.data._id
+							sendNewProductCategory(productId)
+						})
+					})
+				})
+			} else {
+				// Get variants data from db because no variant update
+				// Define url get product by product id
+				const urlGetProductById = `http://localhost:3000/products/${productId}`
+				// Get the product
+				axios.get(urlGetProductById).then((response) => {
+					// Define the object
+					return new Promise ((resolve, reject) => {
+						let newProduct = {
+							productAvailability: getProductAvailabilityValue(),
+							productName: getProductNameValue(),
+							productCategory: getProductCategoryValue(),
+							productDescription: getProductDescriptionValue(),
+							productPrice: getProductPriceValue(),
+							productType: getProductTypeValue(),
+							productStockType: getProductStockTypeValue(),
+							productQty: getProductQtyValue(),
+							productVariance: response.data[0].productVariance,
+							productSKU: getProductSKUValue(),
+							productWeight: getProductWeightValue(),
+							productImages: productImages,
+							productShippingMethods: getProductShippingMethodValue(),
+							createdAt: response.data[0].createdAt,
+							updatedAt: new Date()
+						}
+						resolve(newProduct)
+					})
+					.then((newProduct) => {
+						// Define url post edit product
+						urlPostEditProduct = `http://localhost:3000/products/edit/${productId}`
+						// Post new product
+						axios.put(urlPostEditProduct, newProduct)
+						.then((response) => {
+							// Define product ID
+							let productId = response.data._id
+							sendNewProductCategory(productId)
+						})
+					})
+				})
+			}
 		})
 	}
 
 	// On load
 	// Populate data on forms
 	populateData()
+
+	// Upload if there are new images
+	// Taking mDropzoneTwo element from dropzoneEditProduct script
+	processUploadWithNewImages = async () => {
+    // TODO: Butuh LOADER = START
+    // Start the upload process
+    await mDropzoneTwo.processQueue()
+    // After upload finished call the rest of the object from newProduct script
+    // TODO: Setelah image masuk ke database, maka harus di panggil lagi
+    // dan dimasukkan ke product images
+    mDropzoneTwo.on('queuecomplete', () => {
+      // Define url get image by section
+      const urlGetImageBySection = 'http://localhost:3000/images/section'
+      // Get the images
+      axios.post(urlGetImageBySection, {imageSection: `product-${getProductSKUValue()}`})
+      .then( async (response) => {
+        // Define arr images
+        let arrProductImages = []
+        // Break down the images
+        await response.data.forEach((dataImages) => {
+          arrProductImages.push(dataImages._id)
+        })
+        // Get the combined object from newProduct script
+        await getCombinedForm(arrProductImages)
+        // TODO: butuh LOADER = STOP and swal(blablabla), then redirect
+        // ke halaman products
+      })
+    })
+  }
+
+  // Upload if there are no new images
+  processUploadWithoutNewImages = () => {
+  	// Define url get image by section
+    const urlGetImageBySection = 'http://localhost:3000/images/section'
+    // Get the images
+    axios.post(urlGetImageBySection, {imageSection: `product-${getProductSKUValue()}`})
+    .then( async (response) => {
+      // Define arr images
+      let arrProductImages = []
+      // Break down the images
+      await response.data.forEach((dataImages) => {
+        arrProductImages.push(dataImages._id)
+      })
+      // Get the combined object from newProduct script
+      await getCombinedForm(arrProductImages)
+      // TODO: butuh LOADER = STOP and swal(blablabla), then redirect
+      // ke halaman products
+    })
+  }
+
+	// On submit
+	$('#btnSubmit').click((e) => {
+		e.preventDefault()
+		// Get mDropzoneTwo element from dropzoneEditProduct script
+		// Check if there are files in dropzone
+		if (mDropzoneTwo.files.length > 0) {
+			// if any, then upload using dropzone
+			processUploadWithNewImages()
+		} else {
+			// If not, then normal upload
+			processUploadWithoutNewImages()
+		}
+	})
 
 })
