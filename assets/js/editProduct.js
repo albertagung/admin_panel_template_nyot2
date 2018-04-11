@@ -269,6 +269,7 @@ $(document).ready(() => {
 				productVariants = state
 				// Show variant options when state changed to "true"
 				if (productVariants) {
+					$('#variantSelection').loading('start')
 					// Remove previous variant selections
 					$("#variantSelection").html('')
 					// Show add more variant selection button
@@ -345,6 +346,7 @@ $(document).ready(() => {
 							})
 						})
 					})
+					$('#variantSelection').loading('stop')
 					// Delete variant selections (using e.target to know which one clicked)
 					$('.classBtnDeleteVariantSelections').click((e) => {
 						$(`#${e.target.id}`).parents('.entry').remove()
