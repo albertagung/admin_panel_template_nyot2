@@ -101,11 +101,43 @@ $(document).ready(() => {
 		.then((response) => {
 			response.data[0].productImages.forEach((dataImages) => {
 				$('#productImages').append(`
-					<div class="col-md">
-						<i class="fa fa-trash-o"></i>
+					<div id="col-md-${dataImages._id}" class="col-md-3" style="padding-bottom: 1em">
+						<a id="btnDeleteImage-${dataImages._id}" href="#" style="color: red">
+							<i class="fa fa-trash-o"></i>
+						</a>
 						<img src="${dataImages.imageUrl}" style="max-width: 100%"></img>
 					</div>
 				`)
+				// Btn delete image
+				$(`#btnDeleteImage-${dataImages._id}`).click((e) => {
+					e.preventDefault()
+					swal({
+					  title: "Are you sure?",
+					  text: "Once deleted, you will not be able to recover this file!",
+					  icon: "warning",
+					  buttons: true,
+					  dangerMode: true,
+					})
+					.then((willDelete) => {
+						if (willDelete) {
+							// Define url delete image from image DB
+							const urlRemoveImageById = `http://localhost:3000/images/delete/${dataImages._id}`
+							// Remove image from image database
+							axios.post(urlRemoveImageById, {imageUrl: dataImages.imageUrl})
+							.then(() => {
+								// Removing col-md that have the image
+								$(`#col-md-${dataImages._id}`).remove()
+								swal("Your image has successfully deleted!", {
+						      icon: "success",
+						    })
+							})
+						} else {
+							swal("Your file is save")
+						}
+					})
+					// TODO: Nanti di delete beneran dari database images
+					// TODO: Tambahin swal saat mau ngedelete image --> "are you sure bla blabla"
+				})
 			})
 		})
 	}
