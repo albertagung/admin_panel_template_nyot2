@@ -27,7 +27,9 @@ $(document).ready(() => {
 											.children().val()
 				// Setting postId into localStorage
 				localStorage.setItem('productId', productId)
-				console.log(productId)
+				// Redirect to edit product page (kenapa disini? karena harus menunggu
+				// localStorage di setting terlebih dahulu)
+				window.location.replace('editProduct.html')
 			})
 		}
 	}, 2000)

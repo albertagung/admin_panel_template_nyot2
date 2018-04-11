@@ -90,7 +90,7 @@ $(document).ready(() => {
 			})
 		})
 		.then((dataNewCategory) => {
-			console.log(dataNewCategory)
+			return dataNewCategory
 		})
 	}
 
@@ -402,13 +402,11 @@ $(document).ready(() => {
 	})
 
 	// Get variant names and variant options value (object format)
-	// Function ini dipanggil di dropzoneNewProduct script
 	getVariantSelectionsValue = (productImages) => {
 		let classVariantName = $('.classVariantName')
 		let classVariantOptions = $('.classVariantOptions')
 		let productVariance = []
 		let productVarianceById = []
-		console.log('masuk')
 		return new Promise ((resolve, reject) => {
 			for (let i = 0; i < classVariantName.length; i++) {
 				// Define arr options for data.text
@@ -425,9 +423,6 @@ $(document).ready(() => {
 					createdAt: new Date(),
 					updatedAt: new Date()
 				}
-				// TODO: push each object into product variants database
-				// TODO: setelah itu id response.data.id setiap object
-				// harus di input ke productVariance product schema
 				// Check if variant field has been filled
 				if (objVariantSelections.variantName) {
 					// Push productVariance to array
@@ -471,6 +466,7 @@ $(document).ready(() => {
 	getProductVariantsData()
 
 	// Combine form data as object
+	// Function ini dipanggil di dropzoneNewProduct script
 	getCombinedForm = (productImages) => {
 		// Using promise to get dataVariants
 		getVariantSelectionsValue().then((dataVariants) => {
@@ -501,7 +497,6 @@ $(document).ready(() => {
 				// Post new product
 				axios.post(urlPostNewProduct, newProduct)
 				.then((response) => {
-					// TODO: Send new product category to DB
 					// Define product ID
 					let productId = response.data._id
 					sendNewProductCategory(productId)
@@ -510,6 +505,7 @@ $(document).ready(() => {
 		})
 	}
 
+	// Just to test
 	// $('#btnSubmit').click((e) => {
 	// 	e.preventDefault()
 	// 	getCombinedForm()

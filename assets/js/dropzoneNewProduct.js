@@ -40,6 +40,7 @@ Dropzone.options.mDropzoneTwo = {
   	let btnSubmit = $('#btnSubmit')
   	mDropzoneTwo = Dropzone.forElement('.dropzone')
   	btnSubmit.click( async (e) => {
+  		// TODO: Butuh LOADER = START
   		await e.preventDefault()
   		// Start the upload process
   		await mDropzoneTwo.processQueue()
@@ -52,7 +53,6 @@ Dropzone.options.mDropzoneTwo = {
   			// Get the images
   			axios.post(urlGetImageBySection, {imageSection: `product-${getProductSKUValue()}`})
   			.then( async (response) => {
-  				console.log(response.data)
   				// Define arr images
   				let arrProductImages = []
   				// Break down the images
@@ -61,7 +61,8 @@ Dropzone.options.mDropzoneTwo = {
   				})
   				// Get the combined object from newProduct script
   				await getCombinedForm(arrProductImages)
-  				console.log('done bossdsasd')
+  				// TODO: butuh LOADER = STOP and swal(blablabla), then redirect
+  				// ke halaman products
   			})
   		})
   	})
