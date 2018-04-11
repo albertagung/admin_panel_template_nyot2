@@ -1,5 +1,15 @@
 $(document).ready(() => {
 
+	// Generate random id
+	generateRandomId = () => {
+		let randomId = ''
+		let possible = "abcdefghijklmnopqrstuvwxyz1234567890"
+		for (let i = 0; i < 5; i++ ) {
+			randomId += possible.charAt(Math.floor(Math.random() * possible.length))
+		}
+		return randomId.toUpperCase() // Make random ID uppercase
+	}
+
 	// Populate data on forms
 	populateData = () => {
 		// TODO: LOADER = START
@@ -26,6 +36,8 @@ $(document).ready(() => {
 			// Populate product description
 			$('#productDescription').summernote('code', dataProduct.productDescription)
 			// TODO: Populate product images into dropzone
+			// Populate product images field
+			getProductImagesData(productId)
 			// Populate product price field
 			$('#productPrice').val(dataProduct.productPrice)
 			// Populate product availability field
@@ -40,6 +52,7 @@ $(document).ready(() => {
 			$('#productWeight').val(dataProduct.productWeight)
 			// Populate product variants field
 			getProductVariantsData(dataProduct.productVariance)
+			// TODO: LOADER = STOP
 		})
 	}
 
@@ -75,6 +88,25 @@ $(document).ready(() => {
 			  	`)
 				})
 			}))
+		})
+	}
+
+	// Get product images data
+	getProductImagesData = (productId) => {
+		// TODO: Send data images using axios to database (using dropzone)
+		// Define url for previously chosen images getter
+		const urlGetSelectedImages = `http://localhost:3000/products/${productId}`
+		// Get image from products database
+		axios.get(urlGetSelectedImages)
+		.then((response) => {
+			response.data[0].productImages.forEach((dataImages) => {
+				$('#productImages').append(`
+					<div class="col-md">
+						<i class="fa fa-trash-o"></i>
+						<img src="${dataImages.imageUrl}" style="max-width: 100%"></img>
+					</div>
+				`)
+			})
 		})
 	}
 
@@ -205,8 +237,8 @@ $(document).ready(() => {
 					productVariance.forEach((dataVariance) => {
 						// Show variant options
 						$("#variantSelection").append(`
-							<div class="row">
-								<div class="col-md">
+							<div class="entry row">
+								<div class="col-md-5">
 									<div class="form-group m-form__group">
 										<label style="font-weight: bold" for="variantName">Variant Name</label>
 										<select class="form-control m-select2 classVariantName" id="variantName-${dataVariance._id}" name="variantName-${dataVariance._id}">
@@ -214,10 +246,18 @@ $(document).ready(() => {
 										</select>
 									</div>
 								</div>
-								<div class="col-md">
-									<label style="font-weight: bold" for="variantOptions">Variant Options</label>
-									<select class="form-control m-select2 classVariantOptions" id="variantOptions-${dataVariance._id}" multiple name="variantOptions-${dataVariance._id}">
-									</select>
+								<div class="col-md-5">
+									<div class="form-group m-form__group">
+										<label style="font-weight: bold" for="variantOptions">Variant Options</label>
+										<select class="form-control m-select2 classVariantOptions" id="variantOptions-${dataVariance._id}" multiple name="variantOptions-${dataVariance._id}">
+										</select>
+									</div>
+								</div>
+								<div class="col-md-2">
+									<div class="form-group m-form__group">
+										<label style="font-weight: bold" for="actions">Actions</label>
+										<a id="btnDeleteVariantSelections${generateRandomId()}" class="btn btn-danger classBtnDeleteVariantSelections">Delete</a>
+									</div>
 								</div>
 							</div>
 							<br>
@@ -265,6 +305,10 @@ $(document).ready(() => {
 							})
 						})
 					})
+					// Delete variant selections (using e.target to know which one clicked)
+					$('.classBtnDeleteVariantSelections').click((e) => {
+						$(`#${e.target.id}`).parents('.entry').remove()
+					})
 				} else {
 					// Make empty when productVariants is "false"
 					$('#variantSelection').empty()
@@ -276,6 +320,243 @@ $(document).ready(() => {
 		// Get bootstrap switch value at loading
 		productVariants = $('[id=productVariants]').bootstrapSwitch('state')
 		return productVariants
+	}
+
+	// Add more variant selections
+	$('#btnAddVariantSelections').click(() => {
+		$('#variantSelection').append(`
+			<div class="entry row" style="padding-bottom: 1em">
+				<div class="col-md-5">
+					<div class="form-group m-form__group">
+						<label style="font-weight: bold" for="variantName${generateRandomId()}">Variant Name</label>
+						<select class="form-control m-select2 classVariantName" id="variantName${generateRandomId()}" name="variantName${generateRandomId()}">
+						</select>
+					</div>
+				</div>
+				<div class="col-md-5">
+					<div class="form-group m-form__group">
+						<label style="font-weight: bold" for="variantOptions${generateRandomId()}">Variant Options</label>
+						<select class="form-control m-select2 classVariantOptions" id="variantOptions${generateRandomId()}" multiple name="variantOptions${generateRandomId()}">
+						</select>
+					</div>
+				</div>
+				<div class="col-md-2">
+					<div class="form-group m-form__group">
+						<label style="font-weight: bold" for="actions">Actions</label>
+						<a id="btnDeleteVariantSelections${generateRandomId()}" class="btn btn-danger classBtnDeleteVariantSelections">Delete</a>
+					</div>
+				</div>
+			</div>
+		`)
+		// Select2 variant name and variant options init (by class)
+		$('.classVariantName').select2({
+			placeholder: "Add a tag",
+      tags: true,
+      // Getting remote data from variance database
+      ajax: {
+      	url: 'http://localhost:3000/variance',
+      	processResults: (response) => {
+    			return {
+      			results: response.data.map((dataVariantName) => {
+      				return {
+      					id: dataVariantName.variantName,
+      					text: dataVariantName.variantName
+      				}
+      			})
+      		}
+      	}
+      }
+		})
+		// Getting remote data from variance database
+		axios.get('http://localhost:3000/variance')
+		.then((response) => {
+			response.data.data.forEach((dataVariance) => {
+				dataVariance.variantOption.forEach((dataOption, i) => {
+					let arrDataOptions = []
+					let objDataOptions = {
+						id: dataOption,
+						text: dataOption
+					}
+					arrDataOptions.push(objDataOptions)
+					$('.classVariantOptions').select2({
+						placeholder: "Add a tag",
+		        tags: true,
+		        data: arrDataOptions
+					})
+				})
+			})
+		})
+		// Delete variant selections (using e.target to know which one clicked)
+		$('.classBtnDeleteVariantSelections').click((e) => {
+			$(`#${e.target.id}`).parents('.entry').remove()
+		})
+	})
+
+	// Get all value
+	// Get product name value
+	getProductNameValue = () => {
+		// Get value
+		let productName = $('#productName').val()
+		return productName
+	}
+
+	// Get product type value
+	getProductTypeValue = () => {
+		// Get the value
+		let productType = $('#productType').val()
+		return productType
+	}
+
+	// Get product category value
+	getProductCategoryValue = () => {
+		// Get value
+    let productCategory = $('#productCategory').val()
+    return productCategory
+	}
+
+	// Send new category to category DB
+	sendNewProductCategory = (productId) => {
+		// Return promise to send axios request to DB
+		return new Promise ((resolve, reject) => {
+			// Define url post new category
+			const urlPostNewCategory = 'http://localhost:3000/categories'
+			// Define obj new category
+			let newCategory = {
+				categoryName: $('#productCategory').val(),
+				categoryProducts: productId,
+				createdAt: new Date(),
+				updatedAt: new Date()
+			}
+			// Send new catagory to category DB
+			axios.post(urlPostNewCategory, newCategory)
+			.then((response) => {
+				resolve(response.data)
+			})
+		})
+		.then((dataNewCategory) => {
+			return dataNewCategory
+		})
+	}
+
+	// Get product SKU value
+	getProductSKUValue = () => {
+		// Get value
+		let productSKU = $('#productSKU').val()
+		return productSKU
+	}
+
+	// Get product description value
+	getProductDescriptionValue = () => {
+		// Get value
+		let productDescription = $('#productDescription').summernote('code')
+		return productDescription
+	}
+
+	// Get product price
+	getProductPriceValue = () => {
+		// Get value
+		let productPrice = $('#productPrice').val()
+		return productPrice
+	}
+
+	// Get product availability value
+	getProductAvailabilityValue = () => {
+		// Get value
+		productAvailability = $('[id=productAvailability]').bootstrapSwitch('state')
+		// if value false = "Out of Stock", true = "Available"
+		if (productAvailability) {
+			return 'Available'
+		} else {
+			return 'Out of Stock'
+		}
+	}
+
+	// Get product stock type value
+	getProductStockTypeValue = () => {
+		// Get value
+		let productStockType = $('#productStockType').val()
+		return productStockType
+	}
+
+	// Get product QTY value
+	getProductQtyValue = () => {
+		// Get value
+		let productQty = $('#productQty').val()
+		return productQty
+	}
+
+	// Get shipping method value
+	getProductShippingMethodValue = () => {
+		// Define arr for the selected shipping methods
+		let arrShippingMethods = []
+		// Get value
+		$('#shippingMethod input[type="checkbox"]:checked').each((i) => {
+			let shippingMethodObjectId = $('#shippingMethod input[type="checkbox"]:checked')[i].value
+			// Push into shippingMethods arr
+			arrShippingMethods.push(shippingMethodObjectId)
+		})
+		if (arrShippingMethods.length < 1) {
+			return 'No shipping method'
+		} else {
+			return arrShippingMethods
+		}
+	}
+
+	// Get product weight value
+	getProductWeightValue = () => {
+		// Get value
+		let productWeight = $('#productWeight').val()
+		return productWeight
+	}
+
+	// Get variant names and variant options value (object format)
+	getVariantSelectionsValue = (productImages) => {
+		let classVariantName = $('.classVariantName')
+		let classVariantOptions = $('.classVariantOptions')
+		let productVariance = []
+		let productVarianceById = []
+		return new Promise ((resolve, reject) => {
+			for (let i = 0; i < classVariantName.length; i++) {
+				// Define arr options for data.text
+				let arrOptions = []
+				// Breaking down the array of object to get just the text
+				$(`#${classVariantOptions[i].id}`).select2('data').forEach((dataOptions) => {
+					// Push the text into arr options
+					arrOptions.push(dataOptions.text)
+				})
+				// Make each variant selection as an object
+				let objVariantSelections = {
+					variantName: $(`#${classVariantName[i].id}`).val(),
+					variantOption: arrOptions,
+					createdAt: new Date(),
+					updatedAt: new Date()
+				}
+				// Check if variant field has been filled
+				if (objVariantSelections.variantName) {
+					// Push productVariance to array
+					resolve(productVariance.push(objVariantSelections))
+				} else {
+					// do something if no variants filled
+					// TODO: Validation when no variants is filled
+					resolve('takada')
+				}
+			}
+		})
+		.then(() => {
+			return new Promise ((resolve, reject) => {
+				// Define url insert new variance
+				const urlInsertNewVariant = 'http://localhost:3000/variance'
+				// Send data to variance database
+				axios.post(urlInsertNewVariant, productVariance)
+				.then((response) => {
+					let dataVariants = response.data
+					resolve(dataVariants)
+				})
+			})
+			.then((dataVariants) => {
+				return dataVariants
+			})
+		})
 	}
 
 	// On load
