@@ -112,6 +112,7 @@ var DatatableRemoteAjaxDemo = function() {
               6: {'title': 'Danger', 'class': ' m-badge--danger'},
               7: {'title': 'Warning', 'class': ' m-badge--warning'},
             };
+            console.log(status[row.Status])
             return '<span class="m-badge ' + status[row.Status].class + ' m-badge--wide">' + status[row.Status].title + '</span>';
           },
         }, {
