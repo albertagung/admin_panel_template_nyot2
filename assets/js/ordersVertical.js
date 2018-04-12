@@ -49,36 +49,36 @@ var DefaultDatatableDemo = function () {
 					data.forEach((dataStatus) => {
 						// If !== order status from DB, then append the options
 						if (dataStatus !== index.status) {
-							$('.orderStatus').append(`
+							$(`#orderStatus${datatable}`).append(`
 								<option value="${dataStatus}">${dataStatus}</option>
 							`)
 						}
 					})
 					// If === order status from DB, then change the color
-					if ($('.orderStatus').val() === 'Waiting for Payment') {
-						$('.orderStatus').css('background-color', 'orange').css('color', 'white')
-					} else if ($('.orderStatus').val() === 'Waiting for Shipment') {
-						$('.orderStatus').css('background-color', 'yellow')
-					} else if ($('.orderStatus').val() === 'Shipped') {
-						$('.orderStatus').css('background-color', 'green').css('color', 'white')
-					} else if ($('.orderStatus').val() === 'Cancelled') {
-						$('.orderStatus').css('background-color', 'red').css('color', 'white')
+					if ($(`#orderStatus${datatable}`).val() === 'Waiting for Payment') {
+						$(`#orderStatus${datatable}`).css('background-color', 'orange').css('color', 'white')
+					} else if ($(`#orderStatus${datatable}`).val() === 'Waiting for Shipment') {
+						$(`#orderStatus${datatable}`).css('background-color', 'yellow')
+					} else if ($(`#orderStatus${datatable}`).val() === 'Shipped') {
+						$(`#orderStatus${datatable}`).css('background-color', 'green').css('color', 'white')
+					} else if ($(`#orderStatus${datatable}`).val() === 'Cancelled') {
+						$(`#orderStatus${datatable}`).css('background-color', 'red').css('color', 'white')
 					}
 					// Define request url to change status
 					const urlChangeOrderStatus = `http://localhost:3000/transactions/edit/status/${index._id}`
 					// On order status change, the color also changes
-					$('.orderStatus').change(() => {
-						if ($('.orderStatus').val() === 'Waiting for Payment') {
-							$('.orderStatus').css('background-color', 'orange').css('color', 'white')
-						} else if ($('.orderStatus').val() === 'Waiting for Shipment') {
-							$('.orderStatus').css('background-color', 'yellow').css('color', 'black')
-						} else if ($('.orderStatus').val() === 'Shipped') {
-							$('.orderStatus').css('background-color', 'green').css('color', 'white')
-						} else if ($('.orderStatus').val() === 'Cancelled') {
-							$('.orderStatus').css('background-color', 'red').css('color', 'white')
+					$(`#orderStatus${datatable}`).change(() => {
+						if ($(`#orderStatus${datatable}`).val() === 'Waiting for Payment') {
+							$(`#orderStatus${datatable}`).css('background-color', 'orange').css('color', 'white')
+						} else if ($(`#orderStatus${datatable}`).val() === 'Waiting for Shipment') {
+							$(`#orderStatus${datatable}`).css('background-color', 'yellow').css('color', 'black')
+						} else if ($(`#orderStatus${datatable}`).val() === 'Shipped') {
+							$(`#orderStatus${datatable}`).css('background-color', 'green').css('color', 'white')
+						} else if ($(`#orderStatus${datatable}`).val() === 'Cancelled') {
+							$(`#orderStatus${datatable}`).css('background-color', 'red').css('color', 'white')
 						}
 						// On order status change, send changes to transactions server
-						axios.post(urlChangeOrderStatus, {status: $('.orderStatus').val()})
+						axios.post(urlChangeOrderStatus, {status: $(`#orderStatus${datatable}`).val()})
 					})
 				}
 			},
@@ -107,7 +107,7 @@ var DefaultDatatableDemo = function () {
 				title: "Status",
 				template: function (row, index, datatable) {
 					return `
-						<select class="form-control m-input orderStatus">
+						<select id="orderStatus${index}" class="form-control m-input">
 							<option value="${row.status}" selected>${row.status}</option>
 						</select>
 					`
