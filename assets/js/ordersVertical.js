@@ -39,9 +39,7 @@ var DefaultDatatableDemo = function () {
 			rows: {
 				afterTemplate: function (row, index, datatable) {
 					// Define data for dropdown
-					let data = [
-						"Waiting for Payment", 
-						"Waiting for Shipment", 
+					let data = [ 
 						"Shipped",
 						"Cancelled"
 					]
@@ -80,6 +78,192 @@ var DefaultDatatableDemo = function () {
 						// On order status change, send changes to transactions server
 						axios.post(urlChangeOrderStatus, {status: $(`#orderStatus${datatable}`).val()})
 					})
+
+					// Creating modal
+					// Define date to normal date
+					let rawDate = new Date(index.createdAt)
+					let invoiceDate = rawDate.toString()
+					$('.modals').append(`
+						<div class="modal fade" id="modal${datatable}" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+							<div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+								<div class="modal-content">
+									<div class="modal-header">
+										<h5 class="modal-title" id="exampleModalLongTitle">
+											Invoice for Order ID: ${index._id}
+										</h5>
+										<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+											<span aria-hidden="true">
+												&times;
+											</span>
+										</button>
+									</div>
+									<div class="modal-body">
+										<div class="m-portlet">
+											<div class="m-portlet__body m-portlet__body--no-padding">
+												<div class="m-invoice-2">
+													<div class="m-invoice__wrapper">
+														<div class="m-invoice__head" style="background-image: url(../../assets/app/media/img//logos/bg-6.jpg);">
+															<div class="m-invoice__container m-invoice__container--centered">
+																<div class="m-invoice__logo">
+																	<a href="#">
+																		<h1>
+																			INVOICE
+																		</h1>
+																	</a>
+																	<a href="#">
+																		<img  src="../../assets/app/media/img//logos/logo_client_color.png">
+																	</a>
+																</div>
+																<span class="m-invoice__desc">
+																	<span>
+																		Cecilia Chapman, 711-2880 Nulla St, Mankato
+																	</span>
+																	<span>
+																		Mississippi 96522
+																	</span>
+																</span>
+																<div class="m-invoice__items">
+																	<div class="m-invoice__item">
+																		<span class="m-invoice__subtitle">
+																			DATE
+																		</span>
+																		<span class="m-invoice__text">
+																			${invoiceDate}
+																		</span>
+																	</div>
+																	<div class="m-invoice__item">
+																		<span class="m-invoice__subtitle">
+																			INVOICE NO.
+																		</span>
+																		<span class="m-invoice__text">
+																			${index.transactionId}
+																		</span>
+																	</div>
+																	<div class="m-invoice__item">
+																		<span class="m-invoice__subtitle">
+																			INVOICE TO.
+																		</span>
+																		<span class="m-invoice__text">
+																			${index.customer.firstName} 
+																			${index.customer.middleName} 
+																			${index.customer.lastName}
+																			<br>
+																			<strong>Email:</strong><br>${index.customer.email}
+																			<br>
+																			<strong>Phone Number:</strong><br>${index.customer.phoneNumber}
+																		</span>
+																	</div>
+																	<div class="m-invoice__item">
+																		<span class="m-invoice__subtitle">
+																			PAYMENT METHOD
+																		</span>
+																		<span class="m-invoice__text">
+																			Payment Method Option
+																		</span>
+																	</div>
+																</div>
+															</div>
+														</div>
+														<div class="m-invoice__body m-invoice__body--centered">
+															<div class="table-responsive">
+																<table class="table">
+																	<thead>
+																		<tr>
+																			<th>
+																				PRODUCT NAME
+																			</th>
+																			<th>
+																				QTY
+																			</th>
+																			<th>
+																				UNIT PRICE
+																			</th>
+																			<th>
+																				TOTAL PRICE
+																			</th>
+																		</tr>
+																	</thead>
+																	<tbody id="invoiceBody"></tbody>
+																</table>
+															</div>
+														</div>
+														<div class="m-invoice__footer">
+															<div class="m-invoice__table  m-invoice__table--centered table-responsive">
+																<table class="table">
+																	<thead>
+																		<tr>
+																			<th>
+																				BANK
+																			</th>
+																			<th>
+																				ACC.NO.
+																			</th>
+																			<th>
+																				DUE DATE
+																			</th>
+																			<th>
+																				TOTAL AMOUNT
+																			</th>
+																		</tr>
+																	</thead>
+																	<tbody>
+																		<tr>
+																			<td>
+																				BARCLAYS UK
+																			</td>
+																			<td>
+																				12345678909
+																			</td>
+																			<td>
+																				Jan 07, 2018
+																			</td>
+																			<td class="m--font-danger">
+																				20,600.00
+																			</td>
+																		</tr>
+																	</tbody>
+																</table>
+															</div>
+														</div>
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+									<div class="modal-footer">
+										<button type="button" class="btn btn-secondary" data-dismiss="modal">
+											Close
+										</button>
+										<button type="button" class="btn btn-primary">
+											Save changes
+										</button>
+										<button type="button" class="btn btn-primary">
+											Print
+										</button>
+									</div>
+								</div>
+							</div>
+						</div>
+					`)
+					// Append invoice items
+					index.products.forEach((dataProducts) => {
+						$('#invoiceBody').append(`
+							<tr>
+								<td>
+									${dataProducts.productName}
+								</td>
+								<td>
+									80
+								</td>
+								<td>
+									$40.00
+								</td>
+								<td class="m--font-danger">
+									$3200.00
+								</td>
+							</tr>
+						`)
+					})
 				}
 			},
 
@@ -89,6 +273,9 @@ var DefaultDatatableDemo = function () {
 				sortable: false,
 				width: 40,
 				selector: {class: 'm-checkbox--solid m-checkbox--brand'}
+			}, {
+				field: "transactionId",
+				title: "Transaction ID"
 			}, {
 				field: "customer",
 				title: "Customer Name",
@@ -123,8 +310,15 @@ var DefaultDatatableDemo = function () {
 				sortable: false,
 				overflow: 'visible',
 				template: function (row, index, datatable) {
+					// Open modal
 					return `\
-						<a id='btnViewOrder${index}' href="#" class="m-portlet__nav-link btn m-btn m-btn--hover-accent m-btn--icon m-btn--icon-only m-btn--pill" title="View order">\
+						<a 
+							id='btnViewOrder${index}' 
+							href="#" 
+							class="m-portlet__nav-link btn m-btn m-btn--hover-accent m-btn--icon m-btn--icon-only m-btn--pill" 
+							title="View order" 
+							data-toggle="modal"
+							data-target="#modal${index}">\
 							<i class="la la-align-justify"></i>\
 						</a>\
 						<a id='btnDeleteOrder${index}' href="#" class="m-portlet__nav-link btn m-btn m-btn--hover-danger m-btn--icon m-btn--icon-only m-btn--pill" title="Delete">\
