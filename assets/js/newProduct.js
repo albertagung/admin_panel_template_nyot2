@@ -434,13 +434,13 @@ $(document).ready(() => {
 						// TODO: Validation when no variants is filled
 						resolve('takada')
 					}
-				} else {
-					// If not, then just resolve empty and proceed to then
-					resolve('variant option unchecked')
 				}
+			} else {
+				// If not, then just resolve empty and proceed to then
+				resolve('variant option unchecked')
 			}
 		})
-		.then(() => {
+		.then((response) => {
 			if (response !== 'variant option unchecked') {
 				return new Promise ((resolve, reject) => {
 					// Define url insert new variance

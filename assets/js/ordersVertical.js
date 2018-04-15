@@ -83,13 +83,18 @@ var DefaultDatatableDemo = function () {
 					// Define date to normal date
 					let rawDate = new Date(index.createdAt)
 					let invoiceDate = rawDate.toString()
+					// Get total ammount of invoice
+					let totalInvoiceAmmount = 0
+					index.products.forEach((eachProductForTotal) => {
+						totalInvoiceAmmount += parseInt(eachProductForTotal.productId.productPrice)
+					})
 					$('.modals').append(`
 						<div class="modal fade" id="modal${datatable}" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
 							<div class="modal-dialog modal-dialog-centered modal-lg" role="document">
 								<div class="modal-content">
 									<div class="modal-header">
 										<h5 class="modal-title" id="exampleModalLongTitle">
-											Invoice for Order ID: ${index._id}
+											Invoice
 										</h5>
 										<button type="button" class="close" data-dismiss="modal" aria-label="Close">
 											<span aria-hidden="true">
@@ -102,7 +107,7 @@ var DefaultDatatableDemo = function () {
 											<div class="m-portlet__body m-portlet__body--no-padding">
 												<div class="m-invoice-2">
 													<div class="m-invoice__wrapper">
-														<div class="m-invoice__head" style="background-image: url(../../assets/app/media/img//logos/bg-6.jpg);">
+														<div class="m-invoice__head" style="">
 															<div class="m-invoice__container m-invoice__container--centered">
 																<div class="m-invoice__logo">
 																	<a href="#">
@@ -116,10 +121,9 @@ var DefaultDatatableDemo = function () {
 																</div>
 																<span class="m-invoice__desc">
 																	<span>
-																		Cecilia Chapman, 711-2880 Nulla St, Mankato
-																	</span>
-																	<span>
-																		Mississippi 96522
+																		Jl.Daan Mogot Raya No.45A 2-3, Jakarta Barat 11460 Indonesia <br>
+																		<b>P.</b> (021) 5696 7873 (Hunting)  |  <b>F.</b> (021) 5696 7876 / 77 <br>
+																		<b>Whatsapp.</b> +62 812 8333 7210
 																	</span>
 																</span>
 																<div class="m-invoice__items">
@@ -183,7 +187,7 @@ var DefaultDatatableDemo = function () {
 																			</th>
 																		</tr>
 																	</thead>
-																	<tbody id="invoiceBody"></tbody>
+																	<tbody id="invoiceBody${datatable}"></tbody>
 																</table>
 															</div>
 														</div>
@@ -193,13 +197,10 @@ var DefaultDatatableDemo = function () {
 																	<thead>
 																		<tr>
 																			<th>
-																				BANK
+																				SHIPPING ADDRESS
 																			</th>
 																			<th>
-																				ACC.NO.
-																			</th>
-																			<th>
-																				DUE DATE
+																				SHIPPING COURIER
 																			</th>
 																			<th>
 																				TOTAL AMOUNT
@@ -209,16 +210,17 @@ var DefaultDatatableDemo = function () {
 																	<tbody>
 																		<tr>
 																			<td>
-																				BARCLAYS UK
+																				${index.deliveryAddress.street} <br>
+																				${index.deliveryAddress.zipCode} <br>
+																				${index.deliveryAddress.city} <br>
+																				${index.deliveryAddress.province} <br>
+																				${index.deliveryAddress.country}
 																			</td>
 																			<td>
-																				12345678909
-																			</td>
-																			<td>
-																				Jan 07, 2018
+																				${index.shippingMethod}
 																			</td>
 																			<td class="m--font-danger">
-																				20,600.00
+																				${'IDR' + ' ' + totalInvoiceAmmount.toFixed(2).replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,")}
 																			</td>
 																		</tr>
 																	</tbody>
@@ -247,19 +249,22 @@ var DefaultDatatableDemo = function () {
 					`)
 					// Append invoice items
 					index.products.forEach((dataProducts) => {
-						$('#invoiceBody').append(`
+						// Get total price
+						let totalPrice = parseInt(dataProducts.buyingQty) * parseInt(dataProducts.productId.productPrice)
+						// Append invoice body
+						$(`#invoiceBody${datatable}`).append(`
 							<tr>
 								<td>
-									${dataProducts.productName}
+									${dataProducts.productId.productName}
 								</td>
 								<td>
-									80
+									${dataProducts.buyingQty}
 								</td>
 								<td>
-									$40.00
+									${'IDR' + ' ' + dataProducts.productId.productPrice.toFixed(2).replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,")}
 								</td>
 								<td class="m--font-danger">
-									$3200.00
+									${'IDR' + ' ' + totalPrice.toFixed(2).replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,")}
 								</td>
 							</tr>
 						`)
