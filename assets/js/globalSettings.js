@@ -87,6 +87,7 @@ $(document).ready(() => {
 			response.data.forEach((dataCountries) => {
 				// Initiate select2 on country name dropdown
 				$('#countryName').select2({
+					placeholder: 'Select country',
 					// Beacause used in modal, need to define modal parrent
 					dropdownParent: $('#modalEditAddress')
 				})
@@ -100,27 +101,78 @@ $(document).ready(() => {
 		})
 	}
 
-	// Populate data address from db to edit shipping address modal
-	populateAddress = () => {
-		// Get province data from db
-		axios({
-			method: 'get',
-			url: urlGetProvince
+	// Populate provinces
+	populateProvinces = () => {
+		// Initiate select2 on province name dropdown
+		$('#provinceName').select2({
+			placeholder: 'Select province',
+			// Beacause used in modal, need to define modal parrent
+			dropdownParent: $('#modalEditAddress')
 		})
-		.then((response) => {
-			// Iterate the results
-			response.data.rajaongkir.results.forEach((dataProvinces) => {
-				// Initiate select2 on province name dropdown
-				$('#provinceName').select2({
-					// Beacause used in modal, need to define modal parrent
-					dropdownParent: $('#modalEditAddress')
+		// Add event listener on country name change
+		$('#countryName').change((e) => {
+			// Empty previous data
+			$('#provinceName').empty()
+			// Make empty options in order for placeholder to work
+			$('#provinceName').append(`
+				<option value=""></option>
+			`)
+			// If country === Indonesia show all cities
+			if (e.target.value === 'Indonesia') {
+				// Get province data from db
+				axios({
+					method: 'get',
+					url: urlGetProvince
 				})
-				// Populate data provinces to province field
-				$('#provinceName').append(`
-					<option value="${dataProvinces.province_id}">
-						${dataProvinces.province}
-					</option>
-				`)
+				.then((response) => {
+					// Iterate the results
+					response.data.rajaongkir.results.forEach((dataProvinces) => {
+						// Populate data provinces to province field
+						$('#provinceName').append(`
+							<option value="${dataProvinces.province_id}">
+								${dataProvinces.province}
+							</option>
+						`)
+					})
+				})
+			}
+		})
+	}
+
+	// Populate cities
+	populateCities = () => {
+		// Initiate select2 on city name dropdown
+		$('#cityName').select2({
+			placeholder: 'Select city',
+			// Beacause used in modal, need to define modal parrent
+			dropdownParent: $('#modalEditAddress')
+		})
+		// Add event listener on change
+		$('#provinceName').change(() => {
+			// Empty the previous data
+			$('#cityName').empty()
+			// Make empty options in order for placeholder to work
+			$('#cityName').append(`
+				<option value=""></option>
+			`)
+			// Define province ID
+			let provinceId = $('#provinceName').val()
+			// Define url get city by province id
+			const urlGetCities = `http://localhost:3000/shipping/city/${provinceId}`
+			// Get city database
+			axios({
+				method: 'get',
+				url: urlGetCities
+			})
+			.then((response) => {
+				response.data.rajaongkir.results.forEach((dataCities) => {
+					// Populate data cities to city field
+					$('#cityName').append(`
+						<option value="${dataCities.city_id}">
+							${dataCities.city_name}
+						</option>
+					`)
+				})
 			})
 		})
 	}
@@ -148,7 +200,9 @@ $(document).ready(() => {
 										<label for="countryName">
 											Country
 										</label>
-										<select class="form-control m-select2" id="countryName" style="width: 100%"></select>
+										<select class="form-control m-select2 js-states" id="countryName" style="width: 100%">
+											<option></option>
+										</select>
 									</div>
 								</div>
 								<div class="col-md">
@@ -156,7 +210,22 @@ $(document).ready(() => {
 										<label for="provinceName">
 											Province Name
 										</label>
-										<select class="form-control m-select2" id="provinceName" style="width: 100%"></select>
+										<select class="form-control m-select2 js-states" id="provinceName" style="width: 100%">
+											<option></option>
+										</select>
+									</div>
+								</div>
+							</div>
+							<br>
+							<div class="row">
+								<div class="col-md">
+									<div class="form-group m-form__group">
+										<label for="cityName">
+											City Name
+										</label>
+										<select class="form-control m-select2 js-states" id="cityName" style="width: 100%">
+											<option></option>
+										</select>
 									</div>
 								</div>
 							</div>
@@ -178,6 +247,7 @@ $(document).ready(() => {
 	// On load
 	modalEditAddressInit()
 	populateCountries()
-	populateAddress()
+	populateProvinces()
+	populateCities()
 
 })
