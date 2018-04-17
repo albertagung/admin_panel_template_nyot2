@@ -239,7 +239,7 @@ $(document).ready(() => {
 					$('#shippingMethod').append(`
 						<label class="m-checkbox">
 							<input name="method${dataFilter._id}" type="checkbox" value='${dataFilter._id}' checked>
-							${dataFilter.shippingName} - Price: ${dataFilter.shippingPrice} / Kg
+							${dataFilter.shippingName}
 							<span></span>
 						</label>
 					`)
@@ -249,7 +249,7 @@ $(document).ready(() => {
 					$('#shippingMethod').append(`
 						<label class="m-checkbox">
 							<input name="method${dataFilter._id}" type="checkbox" value='${dataFilter._id}'>
-							${dataFilter.shippingName} - Price: ${dataFilter.shippingPrice} / Kg
+							${dataFilter.shippingName}
 							<span></span>
 						</label>
 					`)

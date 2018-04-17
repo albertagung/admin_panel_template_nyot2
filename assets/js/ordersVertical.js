@@ -253,7 +253,7 @@ var DefaultDatatableDemo = function () {
 									<div class="modal-content">
 										<div class="modal-header">
 											<h5 class="modal-title" id="exampleModalLongTitle">
-												<b>Invoice Status:</b> <br> <img src="../../assets/img/Cloudxier-receipt-icon-02-01.png" style="max-width: 200px">
+												<b>Invoice Status:</b> <br> <img src="../../assets/img/Cloudxier-receipt-icon-02-01q.png" style="max-width: 200px">
 											</h5>
 											<button type="button" class="close" data-dismiss="modal" aria-label="Close">
 												<span aria-hidden="true">

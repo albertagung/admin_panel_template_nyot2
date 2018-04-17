@@ -215,7 +215,7 @@ $(document).ready(() => {
 				$('#shippingMethod').append(`
 					<label class="m-checkbox">
 						<input name="method${dataShipping._id}" type="checkbox" value='${dataShipping._id}'>
-						${dataShipping.shippingName} - Price: ${dataShipping.shippingPrice} / Kg
+						${dataShipping.shippingName}
 						<span></span>
 					</label>
 				`)
