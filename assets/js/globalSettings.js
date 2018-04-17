@@ -17,21 +17,21 @@ $(document).ready(() => {
 	}
 
 	// Get store email address
-	getStoreEmailAddress = () => {
+	getStoreEmailAddressValue = () => {
 		// Define store email address
 		let storeEmailAddress = $('#storeEmailAddress').val()
 		return storeEmailAddress
 	}
 
 	// Get store address
-	getStoreAddress = () => {
+	getStoreAddressValue = () => {
 		// Define store address
 		let storeAddress = $('#storeAddress').val()
 		return storeAddress
 	}
 
 	// Get customer email address
-	getCustomerEmailAddress = () => {
+	getCustomerEmailAddressValue = () => {
 		// Define customer email address
 		let customerEmailAddress = $('#customerEmailAddress').val()
 		return customerEmailAddress
@@ -177,6 +177,44 @@ $(document).ready(() => {
 		})
 	}
 
+	// Populate cities
+	populateSubdistrict = () => {
+		// Initiate select2 on subdistrict name dropdown
+		$('#subdistrictName').select2({
+			placeholder: 'Select subdistrict',
+			// Beacause used in modal, need to define modal parrent
+			dropdownParent: $('#modalEditAddress')
+		})
+		// Add event listener on change
+		$('#cityName').change(() => {
+			// Empty the previous data
+			$('#subdistrictName').empty()
+			// Make empty options in order for placeholder to work
+			$('#subdistrictName').append(`
+				<option value=""></option>
+			`)
+			// Define province ID
+			let cityId = $('#cityName').val()
+			// Define url get subdistrict by province id
+			const urlGetSubdistrict = `http://localhost:3000/shipping/subdistrict/${cityId}`
+			// Get subdistrict database
+			axios({
+				method: 'get',
+				url: urlGetSubdistrict
+			})
+			.then((response) => {
+				response.data.rajaongkir.results.forEach((dataSubdistrict) => {
+					// Populate data cities to subdistrict field
+					$('#subdistrictName').append(`
+						<option value="${dataSubdistrict.subdistrict_id}">
+							${dataSubdistrict.subdistrict_name}
+						</option>
+					`)
+				})
+			})
+		})
+	}
+
 	// Initiate edit address modal
 	modalEditAddressInit = () => {
 		$('body').append(`
@@ -200,7 +238,7 @@ $(document).ready(() => {
 										<label for="countryName">
 											Country
 										</label>
-										<select class="form-control m-select2 js-states" id="countryName" style="width: 100%">
+										<select class="form-control m-select2 js-states " id="countryName" style="width: 100%">
 											<option></option>
 										</select>
 									</div>
@@ -210,7 +248,7 @@ $(document).ready(() => {
 										<label for="provinceName">
 											Province Name
 										</label>
-										<select class="form-control m-select2 js-states" id="provinceName" style="width: 100%">
+										<select class="form-control m-select2 js-states " id="provinceName" style="width: 100%">
 											<option></option>
 										</select>
 									</div>
@@ -223,10 +261,43 @@ $(document).ready(() => {
 										<label for="cityName">
 											City Name
 										</label>
-										<select class="form-control m-select2 js-states" id="cityName" style="width: 100%">
+										<select class="form-control m-select2 js-states " id="cityName" style="width: 100%">
 											<option></option>
 										</select>
 									</div>
+								</div>
+								<div class="col-md">
+									<div class="form-group m-form__group">
+										<label for="subdistrictName">
+											Subdistrict Name
+										</label>
+										<select class="form-control m-select2 js-states " id="subdistrictName" style="width: 100%">
+											<option></option>
+										</select>
+									</div>
+								</div>
+							</div>
+							<br>
+							<div class="row">
+								<div class="col-md">
+									<div class="form-group m-form__group">
+										<label for="zipCode">
+											zipCode
+										</label>
+										<input class="form-control m-input " id="zipCode" style="width: 100%">
+										</input>
+									</div>
+								</div>
+								<div class="col-md"></div>
+							</div>
+							<br>
+							<div class="row">
+								<div class="col-md">
+									<div class="form-group m-form__group">
+									<label for="addressDetails">
+										Street / Apt / Suites Details
+									</label>
+									<textarea class="form-control m-input" id="addressDetails" rows="4"></textarea>
 								</div>
 							</div>
 						</div>
@@ -234,7 +305,7 @@ $(document).ready(() => {
 							<button type="button" class="btn btn-secondary" data-dismiss="modal">
 								Close
 							</button>
-							<button type="button" class="btn btn-primary">
+							<button id="btnSaveShippingAddress" type="button" class="btn btn-primary">
 								Save changes
 							</button>
 						</div>
@@ -244,10 +315,93 @@ $(document).ready(() => {
 		`)
 	}
 
+	// Fill the shipping from address portlet
+	fillShippingAddress = () => {
+		// On click button save changes
+		$('#btnSaveShippingAddress').click((e) => {
+			e.preventDefault()
+			// Empty previous data
+			$('#shippingFromAddress').empty()
+			// Populate value to shipping from address portlet
+			$('#shippingFromAddress').html(`
+				<p><b>Country:</b> <br> ${$('#countryName option:selected').text()}</p>
+				<p><b>Province:</b> <br> ${$('#provinceName option:selected').text()}</p>
+				<p><b>City:</b> <br> ${$('#cityName option:selected').text()}</p>
+				<p><b>Subdistrict:</b> <br> ${$('#subdistrictName option:selected').text()}</p>
+				<p><b>zipCode:</b> <br> ${$('#zipCode').val()}</p>
+				<p><b>Street / Apt. / Suites Details:</b> <br> ${$('#addressDetails').val()}</p>
+			`)
+			// Close modal
+			$('#modalEditAddress').modal('toggle')
+		})
+	}
+
+	// Get shipping from address value
+	getShippingFromAddressValue = () => {
+		// Define shipping origin object
+		let objShippingOrigin = {
+			street: $('#addressDetails').val(),
+			zipCode: $('#zipCode').val(),
+			city: $('#cityName option:selected').text(),
+			subdistrict: $('#subdistrictName option:selected').text(),
+			province: $('#provinceName option:selected').text(),
+			country: $('#countryName option:selected').text()
+		}
+		return objShippingOrigin
+	}
+
+	// Get low stock value
+	getLowStockValue = () => {
+		// Define low stock
+		let lowStock = $('#lowStockAlert').val()
+		return lowStock
+	}
+
+	// Get medium stock value
+	getMediumStockValue = () => {
+		// Define medium stock
+		let mediumStock = $('#mediumStockAlert').val()
+		return mediumStock
+	}
+
+	// Get high stock value
+	getHighStockValue = () => {
+		// Define high stock
+		let highStock = $('#highStockAlert').val()
+		return highStock
+	}
+
 	// On load
+	getShippingMethodAvailabilityData()
 	modalEditAddressInit()
 	populateCountries()
 	populateProvinces()
 	populateCities()
+	populateSubdistrict()
+	fillShippingAddress()
+
+	// On submit
+	$('#btnSubmit').click((e) => {
+		e.preventDefault()
+		// Define obj global settings
+		let objGlobalSettings = {
+			storeName: getStoreNameValue(),
+			storeEmailAddress: getStoreEmailAddressValue(),
+			storeAddress: getStoreAddressValue(),
+			customerEmailAddress: getCustomerEmailAddressValue(),
+			shippingOrigin: '',
+			stockAlert: {
+				lowStock: getLowStockValue(),
+				mediumStock: getMediumStockValue(),
+				highStock: getHighStockValue()
+			},
+			shippingMethods: getShippingMethodValue(),
+			createdAt: new Date(),
+			updatedAt: new Date()
+		}
+		console.log(objGlobalSettings)
+	})
+
+	// TODO: Masukkin ke database dan narik dari database (edit)
 
 })
