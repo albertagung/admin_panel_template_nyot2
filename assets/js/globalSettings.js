@@ -9,6 +9,25 @@ $(document).ready(() => {
 	// Define url get countries data
 	const urlGetCountries = 'https://restcountries.eu/rest/v2/all?fields=name'
 
+	// Define url post new global settings
+	const urlPostNewGlobalSettings = 'http://localhost:3000/globalSetting'
+
+	// Define url get global settings
+	const urlGetGlobalSettings = 'http://localhost:3000/globalSetting'
+
+	// Populate global settings
+	populateGlobalSettings = (dataGlobalSettings) => {
+		// Populate store name
+		$('#storeName').val(dataGlobalSettings.storeName)
+		// Populate store email address
+		$('#storeEmailAddress').val(dataGlobalSettings.storeEmailAddress)
+		// Populate store office address
+		$('#storeAddress').val(dataGlobalSettings.storeAddress)
+		// Populate customer email address
+		$('#customerEmailAddress').val(dataGlobalSettings.customerEmailAddress)
+		// Populate shipping origin
+	}
+
 	// Get store name value
 	getStoreNameValue = () => {
 		// Define store name
@@ -77,26 +96,100 @@ $(document).ready(() => {
 	}
 
 	// Populate data coountries from API
-	populateCountries = () => {
-		// Get countries data from API
+	populateCountries = (dataGlobalSettings) => {
+		// Check if data global settings available
+		if (dataGlobalSettings) {
+			// Get countries data from API
+			axios({
+				method: 'get',
+				url: urlGetCountries
+			})
+			.then((response) => {
+				response.data.forEach((dataCountries) => {
+					// Check if dataCountries === dataGlobalSettings country
+					if (dataCountries.name === dataGlobalSettings.shippingOrigin.country) {
+						// Initiate select2 on country name dropdown
+						$('#countryName').select2({
+							placeholder: 'Select country',
+							// Beacause used in modal, need to define modal parrent
+							dropdownParent: $('#modalEditAddress')
+						})
+						// Populate data countries to country field
+						$('#countryName').append(`
+							<option value="${dataCountries.name}" selected>
+								${dataCountries.name}
+							</option>
+						`)
+					} else {
+						// Populate the unmatched
+						// Initiate select2 on country name dropdown
+						$('#countryName').select2({
+							placeholder: 'Select country',
+							// Beacause used in modal, need to define modal parrent
+							dropdownParent: $('#modalEditAddress')
+						})
+						// Populate data countries to country field
+						$('#countryName').append(`
+							<option value="${dataCountries.name}">
+								${dataCountries.name}
+							</option>
+						`)
+					}
+				})
+			})
+		} else {
+			// If data global settings === null
+			// Get countries data from API
+			axios({
+				method: 'get',
+				url: urlGetCountries
+			})
+			.then((response) => {
+				response.data.forEach((dataCountries) => {
+					// Initiate select2 on country name dropdown
+					$('#countryName').select2({
+						placeholder: 'Select country',
+						// Beacause used in modal, need to define modal parrent
+						dropdownParent: $('#modalEditAddress')
+					})
+					// Populate data countries to country field
+					$('#countryName').append(`
+						<option value="${dataCountries.name}">
+							${dataCountries.name}
+						</option>
+					`)
+				})
+			})
+		}
+	}
+
+	// Populate province if previous global data settings are available
+	populatePreviousProvince = (dataGlobalSettings) => {
+		// If country === Indonesia show all cities
+		// Get province data from db
 		axios({
 			method: 'get',
-			url: urlGetCountries
+			url: urlGetProvince
 		})
 		.then((response) => {
-			response.data.forEach((dataCountries) => {
-				// Initiate select2 on country name dropdown
-				$('#countryName').select2({
-					placeholder: 'Select country',
-					// Beacause used in modal, need to define modal parrent
-					dropdownParent: $('#modalEditAddress')
-				})
-				// Populate data countries to country field
-				$('#countryName').append(`
-					<option value="${dataCountries.name}">
-						${dataCountries.name}
-					</option>
-				`)
+			// Iterate the results
+			response.data.rajaongkir.results.forEach((dataProvinces) => {
+				// Check if dataGlobalSettings province id === dataProvince province id
+				if (dataGlobalSettings.shippingOrigin.province === dataProvinces.province_id) {
+					// Populate data provinces to province field
+					$('#provinceName').append(`
+						<option value="${dataProvinces.province_id}" selected>
+							${dataProvinces.province}
+						</option>
+					`)
+				} else {
+					// Populate unmatched data provinces to province field
+					$('#provinceName').append(`
+						<option value="${dataProvinces.province_id}">
+							${dataProvinces.province}
+						</option>
+					`)
+				}
 			})
 		})
 	}
@@ -139,8 +232,42 @@ $(document).ready(() => {
 		})
 	}
 
+	// Populate city if previous global data settings are available
+	populatePreviousCity = (dataGlobalSettings) => {
+		// Define province ID
+		let provinceId = dataGlobalSettings.shippingOrigin.province
+		// Define url get city by province id
+		const urlGetCities = `http://localhost:3000/shipping/city/${provinceId}`
+		// Get city database
+		axios({
+			method: 'get',
+			url: urlGetCities
+		})
+		.then((response) => {
+			response.data.rajaongkir.results.forEach((dataCities) => {
+				// Check if dataGlobalSettings city id === dataCities city id
+				if (dataGlobalSettings.shippingOrigin.city === dataCities.city_id) {
+					// Populate data cities to city field
+					$('#cityName').append(`
+						<option value="${dataCities.city_id}" selected>
+							${dataCities.city_name}
+						</option>
+					`)
+				} else {
+					// Populate unmatched data cities to city field
+					$('#cityName').append(`
+						<option value="${dataCities.city_id}">
+							${dataCities.city_name}
+						</option>
+					`)
+				}
+			})
+		})
+	}
+
 	// Populate cities
 	populateCities = () => {
+		console.log('masuk sini dulu')
 		// Initiate select2 on city name dropdown
 		$('#cityName').select2({
 			placeholder: 'Select city',
@@ -173,6 +300,39 @@ $(document).ready(() => {
 						</option>
 					`)
 				})
+			})
+		})
+	}
+
+	// Populate subdistrict if previous global data settings are available
+	populatePreviousSubdistrict = (dataGlobalSettings) => {
+		// Define province ID
+		let cityId = dataGlobalSettings.shippingOrigin.city
+		// Define url get subdistrict by province id
+		const urlGetSubdistrict = `http://localhost:3000/shipping/subdistrict/${cityId}`
+		// Get subdistrict database
+		axios({
+			method: 'get',
+			url: urlGetSubdistrict
+		})
+		.then((response) => {
+			response.data.rajaongkir.results.forEach((dataSubdistrict) => {
+				// Check if dataGlobalSettings subdistrict id === dataSubdistrict subdistrict id
+				if (dataGlobalSettings.shippingOrigin.subdistrict === dataSubdistrict.subdistrict_id) {
+					// Populate data cities to subdistrict field
+					$('#subdistrictName').append(`
+						<option value="${dataSubdistrict.subdistrict_id}" selected>
+							${dataSubdistrict.subdistrict_name}
+						</option>
+					`)
+				} else {
+					// Populate unmatched data cities to subdistrict field
+					$('#subdistrictName').append(`
+						<option value="${dataSubdistrict.subdistrict_id}">
+							${dataSubdistrict.subdistrict_name}
+						</option>
+					`)
+				}
 			})
 		})
 	}
@@ -342,10 +502,14 @@ $(document).ready(() => {
 		let objShippingOrigin = {
 			street: $('#addressDetails').val(),
 			zipCode: $('#zipCode').val(),
-			city: $('#cityName option:selected').text(),
-			subdistrict: $('#subdistrictName option:selected').text(),
-			province: $('#provinceName option:selected').text(),
-			country: $('#countryName option:selected').text()
+			// Populate city code
+			city: $('#cityName').val(),
+			// Populate subdistrict code
+			subdistrict: $('#subdistrictName').val(),
+			// Populate province code
+			province: $('#provinceName').val(),
+			// Populate country code
+			country: $('#countryName').val()
 		}
 		return objShippingOrigin
 	}
@@ -371,14 +535,42 @@ $(document).ready(() => {
 		return highStock
 	}
 
-	// On load
-	getShippingMethodAvailabilityData()
-	modalEditAddressInit()
-	populateCountries()
-	populateProvinces()
-	populateCities()
-	populateSubdistrict()
-	fillShippingAddress()
+	// Check if global settings already filled
+	// Get global setting from db
+	axios({
+		method: 'get',
+		url: urlGetGlobalSettings
+	})
+	.then((response) => {
+		// On load function
+		getShippingMethodAvailabilityData()
+		modalEditAddressInit()
+		populateCountries(response.data[0])
+		populateProvinces()
+		populateCities()
+		populateSubdistrict()
+		fillShippingAddress()
+		if (response.data.length > 0) {
+			// Populate previous province
+			populatePreviousProvince(response.data[0])
+			// Populate previous city
+			populatePreviousCity(response.data[0])
+			// Populate previous subdistrict
+			populatePreviousSubdistrict(response.data[0])
+			// Populate previous global settings
+			populateGlobalSettings(response.data[0])
+		} else {
+			// On load function
+			getShippingMethodAvailabilityData()
+			modalEditAddressInit()
+			populateCountries()
+			populateProvinces()
+			populateCities()
+			populateSubdistrict()
+			fillShippingAddress()
+			populateGlobalSettings(response.data[0])
+		}
+	})
 
 	// On submit
 	$('#btnSubmit').click((e) => {
@@ -389,7 +581,7 @@ $(document).ready(() => {
 			storeEmailAddress: getStoreEmailAddressValue(),
 			storeAddress: getStoreAddressValue(),
 			customerEmailAddress: getCustomerEmailAddressValue(),
-			shippingOrigin: '',
+			shippingOrigin: getShippingFromAddressValue(),
 			stockAlert: {
 				lowStock: getLowStockValue(),
 				mediumStock: getMediumStockValue(),
@@ -399,9 +591,20 @@ $(document).ready(() => {
 			createdAt: new Date(),
 			updatedAt: new Date()
 		}
-		console.log(objGlobalSettings)
+		// Post new global settings to database
+		axios({
+			method: 'post',
+			url: urlPostNewGlobalSettings,
+			data: objGlobalSettings
+		})
+		.then((response) => {
+			swal('Success', 'Your settings has been saved', 'success')
+			.then(() => {
+				console.log(response.data)
+			})
+		})
 	})
 
-	// TODO: Masukkin ke database dan narik dari database (edit)
+	// TODO: Narik dari database (edit global settings)
 
 })
