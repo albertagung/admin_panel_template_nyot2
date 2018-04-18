@@ -15,6 +15,9 @@ $(document).ready(() => {
 	// Define url post new global settings
 	const urlPostNewGlobalSettings = 'http://localhost:3000/globalSetting'
 
+	// Define url update global settings
+	const urlUpdateGlobalSettings = 'http://localhost:3000/globalSetting'
+
 	// Define url get global settings
 	const urlGetGlobalSettings = 'http://localhost:3000/globalSetting'
 
@@ -605,6 +608,72 @@ $(document).ready(() => {
 		return highStock
 	}
 
+	// On submit with new data (post new)
+	onSubmitNewData = (e) => {
+		e.preventDefault()
+		// Define obj global settings
+		let objGlobalSettings = {
+			storeName: getStoreNameValue(),
+			storeEmailAddress: getStoreEmailAddressValue(),
+			storeAddress: getStoreAddressValue(),
+			customerEmailAddress: getCustomerEmailAddressValue(),
+			shippingOrigin: getShippingFromAddressValue(),
+			stockAlert: {
+				lowStock: getLowStockValue(),
+				mediumStock: getMediumStockValue(),
+				highStock: getHighStockValue()
+			},
+			shippingMethods: getShippingMethodValue(),
+			createdAt: new Date(),
+			updatedAt: new Date()
+		}
+		// Post new global settings to database
+		axios({
+			method: 'post',
+			url: urlPostNewGlobalSettings,
+			data: objGlobalSettings
+		})
+		.then((response) => {
+			swal('Success', 'Your settings has been saved', 'success')
+			.then(() => {
+				console.log(response.data)
+			})
+		})
+	}
+
+	// On submit with previus data (edit data)
+	onSubmitPreviousData = (e, globalSettingsId) => {
+		e.preventDefault()
+		// Define obj global settings
+		let objGlobalSettings = {
+			storeName: getStoreNameValue(),
+			storeEmailAddress: getStoreEmailAddressValue(),
+			storeAddress: getStoreAddressValue(),
+			customerEmailAddress: getCustomerEmailAddressValue(),
+			shippingOrigin: getShippingFromAddressValue(),
+			stockAlert: {
+				lowStock: getLowStockValue(),
+				mediumStock: getMediumStockValue(),
+				highStock: getHighStockValue()
+			},
+			shippingMethods: getShippingMethodValue(),
+			createdAt: new Date(),
+			updatedAt: new Date()
+		}
+		// Post new global settings to database
+		axios({
+			method: 'put',
+			url: `${urlUpdateGlobalSettings}/edit/${globalSettingsId}`,
+			data: objGlobalSettings
+		})
+		.then((response) => {
+			swal('Success', 'Your settings has been saved', 'success')
+			.then(() => {
+				console.log(response.data)
+			})
+		})
+	}
+
 	// Populate all previous global settings data if exist
 	// Get global setting from db
 	axios({
@@ -649,6 +718,10 @@ $(document).ready(() => {
 			$('#mediumStockAlert').val(response.data[0].stockAlert.mediumStock)
 			// Populate previous high stock alert
 			$('#highStockAlert').val(response.data[0].stockAlert.highStock)
+			// Button submit edit global settings
+			$('#btnSubmit').click((e) => {
+				onSubmitPreviousData(e, response.data[0]._id)
+			})
 			// Loading stop
 			$.LoadingOverlay('hide')
 		} else {
@@ -661,40 +734,13 @@ $(document).ready(() => {
 			populateCities()
 			populateSubdistrict()
 			fillShippingAddress()
-		}
-	})
-
-	// On submit
-	$('#btnSubmit').click((e) => {
-		e.preventDefault()
-		// Define obj global settings
-		let objGlobalSettings = {
-			storeName: getStoreNameValue(),
-			storeEmailAddress: getStoreEmailAddressValue(),
-			storeAddress: getStoreAddressValue(),
-			customerEmailAddress: getCustomerEmailAddressValue(),
-			shippingOrigin: getShippingFromAddressValue(),
-			stockAlert: {
-				lowStock: getLowStockValue(),
-				mediumStock: getMediumStockValue(),
-				highStock: getHighStockValue()
-			},
-			shippingMethods: getShippingMethodValue(),
-			createdAt: new Date(),
-			updatedAt: new Date()
-		}
-		// Post new global settings to database
-		axios({
-			method: 'post',
-			url: urlPostNewGlobalSettings,
-			data: objGlobalSettings
-		})
-		.then((response) => {
-			swal('Success', 'Your settings has been saved', 'success')
-			.then(() => {
-				console.log(response.data)
+			// Button submit post new global settings
+			$('#btnSubmit').click((e) => {
+				onSubmitNewData(e)
 			})
-		})
+			// Loading stop
+			$.LoadingOverlay('hide')
+		}
 	})
 
 	// TODO: Narik dari database (edit global settings)
