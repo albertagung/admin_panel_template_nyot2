@@ -18,19 +18,6 @@ $(document).ready(() => {
 	// Define url get global settings
 	const urlGetGlobalSettings = 'http://localhost:3000/globalSetting'
 
-	// Populate global settings
-	populateGlobalSettings = (dataGlobalSettings) => {
-		// Populate store name
-		$('#storeName').val(dataGlobalSettings.storeName)
-		// Populate store email address
-		$('#storeEmailAddress').val(dataGlobalSettings.storeEmailAddress)
-		// Populate store office address
-		$('#storeAddress').val(dataGlobalSettings.storeAddress)
-		// Populate customer email address
-		$('#customerEmailAddress').val(dataGlobalSettings.customerEmailAddress)
-		// Populate shipping origin
-	}
-
 	// Get store name value
 	getStoreNameValue = () => {
 		// Define store name
@@ -58,6 +45,53 @@ $(document).ready(() => {
 		let customerEmailAddress = $('#customerEmailAddress').val()
 		return customerEmailAddress
 	}
+
+	// Populate shipping methods if previous global data settings are available
+	populatePreviousShippingMethod = (dataGlobalSettings) => {
+		// Empty previous shipping method data
+		$('#shippingMethod').empty()
+		// Get data from shipping method db
+		axios({
+			method: 'get',
+			url: urlGetShippingMethods
+		})
+		.then((response) => {
+			// Define dataShippingMethods
+			let dataShippingMethods = response.data
+			// Define arr for id shipping methods from global settings data
+			let arrIdShippingFromDb = []
+			// Breaking down shipping methods from db
+			dataGlobalSettings.shippingMethods.forEach((dataShippingFromDb) => {
+				// Push shipping methods id into array
+				arrIdShippingFromDb.push(dataShippingFromDb._id)
+			})
+			// Filtering the shipping methods
+			dataShippingMethods.filter((dataFilter) => {
+				// Checked if the same
+				if (arrIdShippingFromDb.indexOf(dataFilter._id) >= 0) {
+					// Set options for shipping method
+					$('#shippingMethod').append(`
+						<label class="m-checkbox">
+							<input name="method${dataFilter._id}" type="checkbox" value='${dataFilter._id}' checked>
+							${dataFilter.shippingName}
+							<span></span>
+						</label>
+					`)
+				} else {
+					// If not the same then un-checked
+					// Set options for shipping method
+					$('#shippingMethod').append(`
+						<label class="m-checkbox">
+							<input name="method${dataFilter._id}" type="checkbox" value='${dataFilter._id}'>
+							${dataFilter.shippingName}
+							<span></span>
+						</label>
+					`)
+				}
+			})
+		})
+	}
+
 
 	// Get shipping method availability data
 	getShippingMethodAvailabilityData = () => {
@@ -270,7 +304,6 @@ $(document).ready(() => {
 
 	// Populate cities
 	populateCities = () => {
-		console.log('masuk sini dulu')
 		// Initiate select2 on city name dropdown
 		$('#cityName').select2({
 			placeholder: 'Select city',
@@ -572,22 +605,30 @@ $(document).ready(() => {
 		return highStock
 	}
 
-	// Check if global settings already filled
+	// Populate all previous global settings data if exist
 	// Get global setting from db
 	axios({
 		method: 'get',
 		url: urlGetGlobalSettings
 	})
 	.then((response) => {
-		// On load function
-		getShippingMethodAvailabilityData()
-		modalEditAddressInit()
-		populateCountries(response.data[0])
-		populateProvinces()
-		populateCities()
-		populateSubdistrict()
-		fillShippingAddress()
+		// If previous global settings data are available
 		if (response.data.length > 0) {
+			// On load function
+			modalEditAddressInit()
+			populateCountries(response.data[0])
+			populateProvinces()
+			populateCities()
+			populateSubdistrict()
+			fillShippingAddress()
+			// Populate previous store name
+			$('#storeName').val(response.data[0].storeName)
+			// Populate previous store email address
+			$('#storeEmailAddress').val(response.data[0].storeEmailAddress)
+			// Populate previous store office address
+			$('#storeAddress').val(response.data[0].storeAddress)
+			// Populate previous customer email address
+			$('#customerEmailAddress').val(response.data[0].customerEmailAddress)
 			// Populate previous province
 			populatePreviousProvince(response.data[0])
 			// Populate previous city
@@ -598,22 +639,28 @@ $(document).ready(() => {
 			populatePreviousZipCode(response.data[0])
 			// Populate previous address details
 			populatePreviousAddressDetails(response.data[0])
-			// Populate previous global settings
-			populateGlobalSettings(response.data[0])
 			// Populate previous shipping address field
 			populatePreviousShippingAddress()
+			// Populate previous shipping methods
+			populatePreviousShippingMethod(response.data[0])
+			// Populate previous low stock alert
+			$('#lowStockAlert').val(response.data[0].stockAlert.lowStock)
+			// Populate previous medium stock alert
+			$('#mediumStockAlert').val(response.data[0].stockAlert.mediumStock)
+			// Populate previous high stock alert
+			$('#highStockAlert').val(response.data[0].stockAlert.highStock)
 			// Loading stop
 			$.LoadingOverlay('hide')
 		} else {
+			// Else data global settings not available
 			// On load function
 			getShippingMethodAvailabilityData()
 			modalEditAddressInit()
-			populateCountries()
+			populateCountries(response.data[0])
 			populateProvinces()
 			populateCities()
 			populateSubdistrict()
 			fillShippingAddress()
-			populateGlobalSettings(response.data[0])
 		}
 	})
 
