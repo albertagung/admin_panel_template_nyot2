@@ -1,5 +1,8 @@
 $(document).ready(() => {
 
+	// Loading start
+	$.LoadingOverlay('show')
+
 	// Define url get shipping methods
 	const urlGetShippingMethods = 'http://localhost:3000/shippingMethod'
 
@@ -375,6 +378,18 @@ $(document).ready(() => {
 		})
 	}
 
+	// Populate zipcode if previous global data settings are available
+	populatePreviousZipCode = (dataGlobalSettings) => {
+		let zipCode = $('#zipCode').val(dataGlobalSettings.shippingOrigin.zipCode)
+		return zipCode
+	}
+
+	// Populate address details if previous global data settings are available
+	populatePreviousAddressDetails = (dataGlobalSettings) => {
+		let addressDetails = $('#addressDetails').val(dataGlobalSettings.shippingOrigin.street)
+		return addressDetails
+	}
+
 	// Initiate edit address modal
 	modalEditAddressInit = () => {
 		$('body').append(`
@@ -475,6 +490,28 @@ $(document).ready(() => {
 		`)
 	}
 
+	// Populate shipping address if previous global data settings are available
+	populatePreviousShippingAddress = () => {
+		// Loader start
+		$('#shippingFromAddress').LoadingOverlay('show')
+		// Waiting for data to correctly populate
+		setTimeout(() => {
+			// Empty previous data
+			$('#shippingFromAddress').empty()
+			// Populate value to shipping from address portlet
+			$('#shippingFromAddress').html(`
+				<p><b>Country:</b> <br> ${$('#countryName option:selected').text()}</p>
+				<p><b>Province:</b> <br> ${$('#provinceName option:selected').text()}</p>
+				<p><b>City:</b> <br> ${$('#cityName option:selected').text()}</p>
+				<p><b>Subdistrict:</b> <br> ${$('#subdistrictName option:selected').text()}</p>
+				<p><b>zipCode:</b> <br> ${$('#zipCode').val()}</p>
+				<p><b>Street / Apt. / Suites Details:</b> <br> ${$('#addressDetails').val()}</p>
+			`)
+			// Loader stop
+			$('#shippingFromAddress').LoadingOverlay('hide')
+		}, 2000)
+	}
+
 	// Fill the shipping from address portlet
 	fillShippingAddress = () => {
 		// On click button save changes
@@ -557,8 +594,16 @@ $(document).ready(() => {
 			populatePreviousCity(response.data[0])
 			// Populate previous subdistrict
 			populatePreviousSubdistrict(response.data[0])
+			// Populate previous zipcode
+			populatePreviousZipCode(response.data[0])
+			// Populate previous address details
+			populatePreviousAddressDetails(response.data[0])
 			// Populate previous global settings
 			populateGlobalSettings(response.data[0])
+			// Populate previous shipping address field
+			populatePreviousShippingAddress()
+			// Loading stop
+			$.LoadingOverlay('hide')
 		} else {
 			// On load function
 			getShippingMethodAvailabilityData()
