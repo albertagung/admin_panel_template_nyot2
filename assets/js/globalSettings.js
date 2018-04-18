@@ -610,6 +610,8 @@ $(document).ready(() => {
 
 	// On submit with new data (post new)
 	onSubmitNewData = (e) => {
+		// Loading overlay start
+		$.LoadingOverlay('show')
 		e.preventDefault()
 		// Define obj global settings
 		let objGlobalSettings = {
@@ -634,6 +636,8 @@ $(document).ready(() => {
 			data: objGlobalSettings
 		})
 		.then((response) => {
+			// Loading overlay stop
+			$.LoadingOverlay('hide')
 			swal('Success', 'Your settings has been saved', 'success')
 			.then(() => {
 				console.log(response.data)
@@ -643,6 +647,8 @@ $(document).ready(() => {
 
 	// On submit with previus data (edit data)
 	onSubmitPreviousData = (e, globalSettingsId) => {
+		// Loading overlay start
+		$.LoadingOverlay('show')
 		e.preventDefault()
 		// Define obj global settings
 		let objGlobalSettings = {
@@ -667,8 +673,12 @@ $(document).ready(() => {
 			data: objGlobalSettings
 		})
 		.then((response) => {
+			// Loading overlay stop
+			$.LoadingOverlay('hide')
 			swal('Success', 'Your settings has been saved', 'success')
 			.then(() => {
+				// Loading overlay stop
+				$.LoadingOverlay('hide')
 				console.log(response.data)
 			})
 		})
@@ -729,7 +739,7 @@ $(document).ready(() => {
 			// On load function
 			getShippingMethodAvailabilityData()
 			modalEditAddressInit()
-			populateCountries(response.data[0])
+			populateCountries()
 			populateProvinces()
 			populateCities()
 			populateSubdistrict()
@@ -742,7 +752,5 @@ $(document).ready(() => {
 			$.LoadingOverlay('hide')
 		}
 	})
-
-	// TODO: Narik dari database (edit global settings)
 
 })
