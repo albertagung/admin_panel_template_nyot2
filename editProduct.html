@@ -613,7 +613,7 @@
 										</div>
 									</div>
 									<!--begin::Form-->
-									<form class="m-form m-form--fit m-form--label-align-right">
+									<form id="formEditProduct" class="m-form m-form--fit m-form--label-align-right">
 										<div class="m-portlet__body">
 											<div class="row">
 												<div class="col-md-4">
@@ -621,9 +621,9 @@
 														<label style="font-weight: bold" for="productName">
 															Product Name
 														</label>
-														<input type="text" class="form-control m-input" id="productName" placeholder="Enter product name">
+														<input type="text" class="form-control m-input" id="productName" placeholder="Enter product name" required>
 														<!-- <span class="m-form__help">
-																						We'll never share your email with anyone else.
+																							We'll never share your email with anyone else.
 														</span> -->
 													</div>
 												</div>
@@ -654,6 +654,19 @@
 													</div>
 												</div>
 											</div>
+											<br>
+											<div class="row">
+												<div class="col-md-4">
+													<div class="form-group m-form__group"></div>
+												</div>
+												<div id="productDiscountPriceDiv" class="col-md-3"></div>
+												<div class="col-md-3">
+													<div class="form-group m-form__group"></div>
+												</div>
+												<div class="col-md-2">
+													<div class="form-group m-form__group"></div>
+												</div>
+											</div>
 											<div class="form-group m-form__group">
 												<label style="font-weight: bold" for="productDescription">
 													Product Description
@@ -671,7 +684,7 @@
 											</div>
 											<div class="form-group m-form__group">
 												<label style="font-weight: bold" for="addMoreImage">
-												Add More Images
+													Add More Images
 												</label>
 												<div class="col-lg-4 col-md-9 col-sm-12" style="min-width: 100%">
 													<div class="m-dropzone dropzone m-dropzone--primary" id="m-dropzone-two" action="http://localhost:3000/imageUpload" style="min-height: 250px">
@@ -698,10 +711,10 @@
 															<div class="input-group-prepend">
 																<div class="input-group-text">IDR</div>
 															</div>
-															<input type="number" class="form-control m-input" id="productPrice" placeholder="Enter product price">
+															<input type="number" class="form-control m-input" id="productPrice" placeholder="Enter product price" required>
 														</div>
 														<!-- <span class="m-form__help">
-																						We'll never share your email with anyone else.
+																							We'll never share your email with anyone else.
 														</span> -->
 													</div>
 												</div>
@@ -728,7 +741,7 @@
 														<label style="font-weight: bold" for="productQty">
 															Product Stock QTY
 														</label>
-														<input type="number" class="form-control m-input" id="productQty" placeholder="Product QTY" value="0">
+														<input type="number" class="form-control m-input" id="productQty" placeholder="Product QTY" value="0" required>
 													</div>
 												</div>
 											</div>
@@ -749,7 +762,7 @@
 															Product Weight
 														</label>
 														<div class="input-group mb-2">
-															<input type="number" class="form-control m-input" id="productWeight" placeholder="Weight">
+															<input type="number" class="form-control m-input" id="productWeight" placeholder="Weight" required>
 															<div class="input-group-prepend">
 																<div class="input-group-text">Gram</div>
 															</div>
@@ -832,14 +845,14 @@
 		<ul class="m-nav-sticky" style="margin-top: 30px;">
 			<!--
 			<li class="m-nav-sticky__item" data-toggle="m-tooltip" title="Showcase" data-placement="left">
-																<a href="">
-																													<i class="la la-eye"></i>
-																</a>
+																	<a href="">
+																															<i class="la la-eye"></i>
+																	</a>
 			</li>
 			<li class="m-nav-sticky__item" data-toggle="m-tooltip" title="Pre-sale Chat" data-placement="left">
-																<a href="" >
-																													<i class="la la-comments-o"></i>
-																</a>
+																	<a href="" >
+																															<i class="la la-comments-o"></i>
+																	</a>
 			</li>
 			-->
 			<li class="m-nav-sticky__item" data-toggle="m-tooltip" title="Purchase" data-placement="left">

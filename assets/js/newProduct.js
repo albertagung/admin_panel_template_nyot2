@@ -35,6 +35,39 @@ $(document).ready(() => {
 		return productType
 	}
 
+	// Check if product type is sale, then add the discounted price column
+	// Add event listener on change product type value
+	$('#productType').change(() => {
+		if (getProductTypeValue() === 'Sale') {
+			// Empty the div first
+			$('#productDiscountPriceDiv').empty()
+			// Append discounted price field to productDiscountPrice
+			$('#productDiscountPriceDiv').append(`
+				<div class="form-group m-form__group">
+					<label style="font-weight: bold" for="productDiscountPrice">
+						Product Discount Price
+					</label>
+					<div class="input-group mb-2">
+						<div class="input-group-prepend">
+							<div class="input-group-text">IDR</div>
+						</div>
+						<input type="number" class="form-control m-input" id="productDiscountPrice" placeholder="Discounted price">
+					</div>
+				</div>
+			`)
+		} else {
+			// Else empty the div
+			$('#productDiscountPriceDiv').empty()
+		}
+	})
+
+	// Get discount price value
+	getDiscountPriceValue = () => {
+		// Define discount price
+		let discountPrice = $('#productDiscountPrice').val()
+		return discountPrice
+	}
+
 	// Get product category data
 	getProductCategoryData = () => {
 		return new Promise ((resolve, reject) => {
@@ -489,6 +522,7 @@ $(document).ready(() => {
 						productCategory: getProductCategoryValue(),
 						productDescription: getProductDescriptionValue(),
 						productPrice: getProductPriceValue(),
+						productDiscountPrice: getDiscountPriceValue(),
 						productType: getProductTypeValue(),
 						productStockType: getProductStockTypeValue(),
 						productQty: getProductQtyValue(),
@@ -523,6 +557,7 @@ $(document).ready(() => {
 						productCategory: getProductCategoryValue(),
 						productDescription: getProductDescriptionValue(),
 						productPrice: getProductPriceValue(),
+						productDiscountPrice: getDiscountPriceValue(),
 						productType: getProductTypeValue(),
 						productStockType: getProductStockTypeValue(),
 						productQty: getProductQtyValue(),

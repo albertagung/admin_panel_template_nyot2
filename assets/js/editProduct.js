@@ -29,6 +29,8 @@ $(document).ready(() => {
 			// Populate product type field
 			getProductTypeData()
 			$('#productType').val(dataProduct.productType)
+			// Populate discount price data
+			getPreviousDiscountPriceData(dataProduct)
 			// Populate product category field
 			getProductCategoryData(dataProduct.productCategory)
 			$('#productCategory').val(dataProduct.productCategory)
@@ -67,6 +69,80 @@ $(document).ready(() => {
 			<option value="Sale">Sale</option>
 			<option value="Best Seller">Best Seller</option>
 		`)
+	}
+
+	// Get previous discount price data
+	getPreviousDiscountPriceData = (dataProduct) => {
+		// Check if previous product have discount price
+		if (dataProduct.productDiscountPrice !== 0) {
+			// Append previous discounted price to productDiscountPrice
+			$('#productDiscountPriceDiv').append(`
+				<div class="form-group m-form__group">
+					<label style="font-weight: bold" for="productDiscountPrice">
+						Product Discount Price
+					</label>
+					<div class="input-group mb-2">
+						<div class="input-group-prepend">
+							<div class="input-group-text">IDR</div>
+						</div>
+						<input type="number" class="form-control m-input" id="productDiscountPrice" value="${dataProduct.productDiscountPrice}" placeholder="Discounted price">
+					</div>
+				</div>
+			`)
+			// Set the discount price value
+			$('#productDiscountPrice').val(dataProduct.productDiscountPrice)
+			// Add on change event listener
+			discountPriceOnChange()
+		} else {
+			console.log('masuk false')
+			// Init new discount price function
+			discountPriceInit(dataProduct)
+		}
+	}
+
+	// Init the discount price when there are no previous discounted price
+	// Check if product type is sale, then add the discounted price column
+	discountPriceInit = (dataProduct) => {
+		// Add event listener on change product type value
+		$('#productType').change(() => {
+			if (getProductTypeValue() === 'Sale') {
+				// Empty the div first
+				$('#productDiscountPriceDiv').empty()
+				// Append discounted price field to productDiscountPrice
+				$('#productDiscountPriceDiv').append(`
+					<div class="form-group m-form__group">
+						<label style="font-weight: bold" for="productDiscountPrice">
+							Product Discount Price
+						</label>
+						<div class="input-group mb-2">
+							<div class="input-group-prepend">
+								<div class="input-group-text">IDR</div>
+							</div>
+							<input type="number" class="form-control m-input" id="productDiscountPrice" placeholder="Discounted price">
+						</div>
+					</div>
+				`)
+			} else {
+				// Empty the div
+				$('#productDiscountPriceDiv').empty()
+			}
+		})
+	}
+
+	// If there is discounted price, then add this event listener on change
+	discountPriceOnChange = () => {
+		// Add event listener on change product type value
+		$('#productType').change(() => {
+			if (getProductTypeValue() === 'Sale') {
+				// Show the div
+				$('#productDiscountPriceDiv').show()
+			} else {
+				// Change the value of product discount price to 0
+				$('#productDiscountPrice').val(0)
+				// Hide the div
+				$('#productDiscountPriceDiv').hide()
+			}
+		})
 	}
 
 	// Get product category data
@@ -282,7 +358,7 @@ $(document).ready(() => {
 								<div class="col-md-5">
 									<div class="form-group m-form__group">
 										<label style="font-weight: bold" for="variantName">Variant Name</label>
-										<select class="form-control m-select2 classVariantName" id="variantName-${dataVariance._id}" name="variantName-${dataVariance._id}">
+										<select class="form-control m-select2 classVariantName" id="variantName-${dataVariance._id}" name="variantName-${dataVariance._id}" required>
 											<option value="${dataVariance.variantName}" selected="selected">${dataVariance.variantName}</option>
 										</select>
 									</div>
@@ -290,7 +366,7 @@ $(document).ready(() => {
 								<div class="col-md-5">
 									<div class="form-group m-form__group">
 										<label style="font-weight: bold" for="variantOptions">Variant Options</label>
-										<select class="form-control m-select2 classVariantOptions" id="variantOptions-${dataVariance._id}" multiple name="variantOptions-${dataVariance._id}">
+										<select class="form-control m-select2 classVariantOptions" id="variantOptions-${dataVariance._id}" multiple name="variantOptions-${dataVariance._id}" required>
 										</select>
 									</div>
 								</div>
@@ -371,14 +447,14 @@ $(document).ready(() => {
 				<div class="col-md-5">
 					<div class="form-group m-form__group">
 						<label style="font-weight: bold" for="variantName${generateRandomId()}">Variant Name</label>
-						<select class="form-control m-select2 classVariantName" id="variantName${generateRandomId()}" name="variantName${generateRandomId()}">
+						<select class="form-control m-select2 classVariantName" id="variantName${generateRandomId()}" name="variantName${generateRandomId()}" required>
 						</select>
 					</div>
 				</div>
 				<div class="col-md-5">
 					<div class="form-group m-form__group">
 						<label style="font-weight: bold" for="variantOptions${generateRandomId()}">Variant Options</label>
-						<select class="form-control m-select2 classVariantOptions" id="variantOptions${generateRandomId()}" multiple name="variantOptions${generateRandomId()}">
+						<select class="form-control m-select2 classVariantOptions" id="variantOptions${generateRandomId()}" multiple name="variantOptions${generateRandomId()}" required>
 						</select>
 					</div>
 				</div>
@@ -469,7 +545,6 @@ $(document).ready(() => {
 				createdAt: new Date(),
 				updatedAt: new Date()
 			}
-			console.log(newCategory)
 			// Send new catagory to category DB
 			axios.post(urlPostNewCategory, newCategory)
 			.then((response) => {
@@ -519,6 +594,13 @@ $(document).ready(() => {
 		// Get value
 		let productStockType = $('#productStockType').val()
 		return productStockType
+	}
+
+	// Get discount price value
+	getDiscountPriceValue = () => {
+		// Define discount price
+		let discountPrice = $('#productDiscountPrice').val()
+		return discountPrice
 	}
 
 	// Get product QTY value
@@ -633,6 +715,7 @@ $(document).ready(() => {
 							productCategory: getProductCategoryValue(),
 							productDescription: getProductDescriptionValue(),
 							productPrice: getProductPriceValue(),
+							productDiscountPrice: getDiscountPriceValue(),
 							productType: getProductTypeValue(),
 							productStockType: getProductStockTypeValue(),
 							productQty: getProductQtyValue(),
@@ -672,6 +755,7 @@ $(document).ready(() => {
 							productCategory: getProductCategoryValue(),
 							productDescription: getProductDescriptionValue(),
 							productPrice: getProductPriceValue(),
+							productDiscountPrice: getDiscountPriceValue(),
 							productType: getProductTypeValue(),
 							productStockType: getProductStockTypeValue(),
 							productQty: getProductQtyValue(),
@@ -757,15 +841,16 @@ $(document).ready(() => {
 	// On submit
 	$('#btnSubmit').click((e) => {
 		e.preventDefault()
+		console.log($('#formEditProduct')[0].checkValidity())
 		// Get mDropzoneTwo element from dropzoneEditProduct script
 		// Check if there are files in dropzone
-		if (mDropzoneTwo.files.length > 0) {
-			// if any, then upload using dropzone
-			processUploadWithNewImages()
-		} else {
-			// If not, then normal upload
-			processUploadWithoutNewImages()
-		}
+		// if (mDropzoneTwo.files.length > 0) {
+		// 	// if any, then upload using dropzone
+		// 	processUploadWithNewImages()
+		// } else {
+		// 	// If not, then normal upload
+		// 	processUploadWithoutNewImages()
+		// }
 	})
 
 })
