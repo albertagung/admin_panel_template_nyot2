@@ -12,8 +12,8 @@ $(document).ready(() => {
 
 	// Populate data on forms
 	populateData = () => {
-		$('body').loading('start')
-		// TODO: LOADER = START
+		// Loading overlay start
+		$.LoadingOverlay('show')
 		// Get product id
 		let productId = localStorage.getItem('productId')
 		// Define url get product by id
@@ -55,8 +55,8 @@ $(document).ready(() => {
 			$('#productWeight').val(dataProduct.productWeight)
 			// Populate product variants field
 			getProductVariantsData(dataProduct.productVariance)
-			// TODO: LOADER = STOP
-			$('body').loading('stop')
+			// Loading overlay stop
+			$.LoadingOverlay('hide')
 		})
 	}
 
@@ -792,7 +792,8 @@ $(document).ready(() => {
 	// Upload if there are new images
 	// Taking mDropzoneTwo element from dropzoneEditProduct script
 	processUploadWithNewImages = async () => {
-    // TODO: Butuh LOADER = START
+    // Loading overlay start
+  	$.LoadingOverlay('show')
     // Start the upload process
     await mDropzoneTwo.processQueue()
     // After upload finished call the rest of the object from newProduct script
@@ -812,14 +813,20 @@ $(document).ready(() => {
         })
         // Get the combined object from newProduct script
         await getCombinedForm(arrProductImages)
-        // TODO: butuh LOADER = STOP and swal(blablabla), then redirect
-        // ke halaman products
+        // Loading overlay stop
+        $.LoadingOverlay('hide')
+	      swal('Success', 'Your product has been saved!', 'success')
+	      .then(() => {
+	      	window.location.replace('')
+	      })
       })
     })
   }
 
   // Upload if there are no new images
   processUploadWithoutNewImages = () => {
+  	// Loading overlay start
+  	$.LoadingOverlay('show')
   	// Define url get image by section
     const urlGetImageBySection = 'http://localhost:3000/images/section'
     // Get the images
@@ -833,24 +840,33 @@ $(document).ready(() => {
       })
       // Get the combined object from newProduct script
       await getCombinedForm(arrProductImages)
-      // TODO: butuh LOADER = STOP and swal(blablabla), then redirect
-      // ke halaman products
+      // Loading overlay stop
+      $.LoadingOverlay('hide')
+      swal('Success', 'Your product has been saved!', 'success')
+      .then(() => {
+      	window.location.replace('')
+      })
     })
   }
 
 	// On submit
 	$('#btnSubmit').click((e) => {
 		e.preventDefault()
-		console.log($('#formEditProduct')[0].checkValidity())
-		// Get mDropzoneTwo element from dropzoneEditProduct script
-		// Check if there are files in dropzone
-		// if (mDropzoneTwo.files.length > 0) {
-		// 	// if any, then upload using dropzone
-		// 	processUploadWithNewImages()
-		// } else {
-		// 	// If not, then normal upload
-		// 	processUploadWithoutNewImages()
-		// }
+		// Validate all form to be not null
+		if ($('#formEditProduct')[0].checkValidity()) {
+			// If true then submit the data
+			// Get mDropzoneTwo element from dropzoneEditProduct script
+			// Check if there are files in dropzone
+			if (mDropzoneTwo.files.length > 0) {
+				// if any, then upload using dropzone
+				processUploadWithNewImages()
+			} else {
+				// If not, then normal upload
+				processUploadWithoutNewImages()
+			}
+		} else {
+			swal('Warning', 'Please fill all the form fields!', 'warning')
+		}
 	})
 
 })
