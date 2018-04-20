@@ -1,5 +1,10 @@
 $(document).ready(() => {
 
+	// Prevent unload
+	window.addEventListener('beforeunload', () => {
+		
+	})
+
 	// Generate random id
 	generateRandomId = () => {
 		let randomId = ''
@@ -345,7 +350,8 @@ $(document).ready(() => {
 				productVariants = state
 				// Show variant options when state changed to "true"
 				if (productVariants) {
-					$('#variantSelection').loading('start')
+					// Loading overlay start
+					$('#variantSelection').LoadingOverlay('show')
 					// Remove previous variant selections
 					$("#variantSelection").html('')
 					// Show add more variant selection button
@@ -422,7 +428,8 @@ $(document).ready(() => {
 							})
 						})
 					})
-					$('#variantSelection').loading('stop')
+					// Loading overlay start
+					$('#variantSelection').LoadingOverlay('hide')
 					// Delete variant selections (using e.target to know which one clicked)
 					$('.classBtnDeleteVariantSelections').click((e) => {
 						$(`#${e.target.id}`).parents('.entry').remove()
