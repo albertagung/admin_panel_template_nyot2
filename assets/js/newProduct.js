@@ -51,7 +51,7 @@ $(document).ready(() => {
 						<div class="input-group-prepend">
 							<div class="input-group-text">IDR</div>
 						</div>
-						<input type="number" class="form-control m-input" id="productDiscountPrice" placeholder="Discounted price">
+						<input type="number" class="form-control m-input" id="productDiscountPrice" placeholder="Discounted price" required>
 					</div>
 				</div>
 			`)
@@ -299,14 +299,14 @@ $(document).ready(() => {
 							<div class="col-md">
 								<div class="form-group m-form__group">
 									<label style="font-weight: bold" for="variantName">Variant Name</label>
-									<select class="form-control m-select2 classVariantName" id="variantName" name="variantName">
+									<select class="form-control m-select2 classVariantName" id="variantName" name="variantName" required>
 									</select>
 								</div>
 							</div>
 							<div class="col-md">
 								<div class="form-group m-form__group">
 									<label style="font-weight: bold" for="variantName">Variant Options</label>
-									<select class="form-control m-select2 classVariantOptions" id="variantOptions" multiple name="variantOptions">
+									<select class="form-control m-select2 classVariantOptions" id="variantOptions" multiple name="variantOptions" required>
 									</select>
 								</div>
 							</div>
@@ -371,14 +371,14 @@ $(document).ready(() => {
 				<div class="col-md-5">
 					<div class="form-group m-form__group">
 						<label style="font-weight: bold" for="variantName${generateRandomId()}">Variant Name</label>
-						<select class="form-control m-select2 classVariantName" id="variantName${generateRandomId()}" name="variantName${generateRandomId()}">
+						<select class="form-control m-select2 classVariantName" id="variantName${generateRandomId()}" name="variantName${generateRandomId()}" required>
 						</select>
 					</div>
 				</div>
 				<div class="col-md-5">
 					<div class="form-group m-form__group">
 						<label style="font-weight: bold" for="variantOptions${generateRandomId()}">Variant Options</label>
-						<select class="form-control m-select2 classVariantOptions" id="variantOptions${generateRandomId()}" multiple name="variantOptions${generateRandomId()}">
+						<select class="form-control m-select2 classVariantOptions" id="variantOptions${generateRandomId()}" multiple name="variantOptions${generateRandomId()}" required>
 						</select>
 					</div>
 				</div>

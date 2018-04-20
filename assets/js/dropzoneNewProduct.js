@@ -40,31 +40,41 @@ Dropzone.options.mDropzoneTwo = {
   	let btnSubmit = $('#btnSubmit')
   	mDropzoneTwo = Dropzone.forElement('.dropzone')
   	btnSubmit.click( async (e) => {
-  		// TODO: Butuh LOADER = START
-  		await e.preventDefault()
-  		// Start the upload process
-  		await mDropzoneTwo.processQueue()
-  		// After upload finished call the rest of the object from newProduct script
-  		// TODO: Setelah image masuk ke database, maka harus di panggil lagi
-  		// dan dimasukkan ke product images
-  		mDropzoneTwo.on('queuecomplete', () => {
-  			// Define url get image by section
-  			const urlGetImageBySection = 'http://localhost:3000/images/section'
-  			// Get the images
-  			axios.post(urlGetImageBySection, {imageSection: `product-${getProductSKUValue()}`})
-  			.then( async (response) => {
-  				// Define arr images
-  				let arrProductImages = []
-  				// Break down the images
-  				await response.data.forEach((dataImages) => {
-  					arrProductImages.push(dataImages._id)
-  				})
-  				// Get the combined object from newProduct script
-  				await getCombinedForm(arrProductImages)
-  				// TODO: butuh LOADER = STOP and swal(blablabla), then redirect
-  				// ke halaman products
-  			})
-  		})
+      e.preventDefault()
+      // Valiadate form to be not null
+      if ($('#formNewProduct')[0].checkValidity()) {
+        // If true then submit the data
+        // Loading overlay start
+        $.LoadingOverlay('show')
+        // Start the upload process
+        await mDropzoneTwo.processQueue()
+        // After upload finished call the rest of the object from newProduct script
+        // TODO: Setelah image masuk ke database, maka harus di panggil lagi
+        // dan dimasukkan ke product images
+        mDropzoneTwo.on('queuecomplete', () => {
+          // Define url get image by section
+          const urlGetImageBySection = 'http://localhost:3000/images/section'
+          // Get the images
+          axios.post(urlGetImageBySection, {imageSection: `product-${getProductSKUValue()}`})
+          .then( async (response) => {
+            // Define arr images
+            let arrProductImages = []
+            // Break down the images
+            await response.data.forEach((dataImages) => {
+              arrProductImages.push(dataImages._id)
+            })
+            // Get the combined object from newProduct script
+            await getCombinedForm(arrProductImages)
+            $.LoadingOverlay('hide')
+            swal('Success', 'Your product has been saved!', 'success')
+            .then(() => {
+              window.location.replace('products.html')
+            })
+          })
+        })
+      } else {
+        swal('Warning', 'Please fill all the form fields!', 'warning')
+      }
   	})
   }
 };
