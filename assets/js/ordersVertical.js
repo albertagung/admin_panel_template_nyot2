@@ -12,7 +12,10 @@ var DefaultDatatableDemo = function () {
 				source: {
 					read: {
 						url: 'http://localhost:3000/transactions',
-						method: 'GET'
+						method: 'GET',
+						headers: {
+							'key': 'K2AaM8j6KhvcZT7YRuJN'
+						}
 					}
 				},
 				pageSize: 20
@@ -38,6 +41,156 @@ var DefaultDatatableDemo = function () {
 
 			rows: {
 				afterTemplate: function (row, index, datatable) {
+					console.log(index)
+					// Send email every change in order status (to admin)
+					sendEmailToAdmin = () => {
+						return new Promise ((resolve, reject) => {
+							// Define url send email to admin
+							const urlEmailToAdmin = 'http://localhost:3000/email/adminOrderConfirmation'
+							// Send email using axios
+							axios({
+								method: 'post',
+								url: urlEmailToAdmin,
+								data: {
+									emailSender: 'Feather World Team',
+									emailText: 'Order confirmation admin',
+									transactionId: index.transactionId,
+									transactionStatus: $(`#orderStatus${datatable}`).val(),
+									invoiceUrl: index.invoice
+								}
+							})
+							.then((response) => {
+								resolve(response.data)
+							})
+							.catch((err) => {
+								reject(err.response)
+							})
+						})
+					}
+					// Send email every change in order status (to customer) 
+					sendEmailToCustomer = () => {
+						return new Promise ((resolve, reject) => {
+							// Define url send email to customer
+							const urlEmailToCustomer = 'http://localhost:3000/email/customerOrderConfirmation'
+							// Send email using axios
+							axios({
+								method: 'post',
+								url: urlEmailToCustomer,
+								data: {
+									emailSender: 'Feather World Team',
+									customerEmail: index.customer.email,
+									emailText: 'Order confirmation customer',
+									customerOrderId: index.transactionId,
+									customerOrderStatus: $(`#orderStatus${datatable}`).val(),
+									customerFirstName: index.customer.firstName + ' ' + index.customer.middleName,
+									customerLastName: index.customer.lastName,
+									urlInvoiceAttachment: index.invoice
+								}
+							})
+							.then((response) => {
+								resolve(response.data)
+							})
+							.catch((err) => {
+								reject(err.response)
+							})
+						})
+					}
+					// Send shipment confirmation email (to customer)
+					sendShipmentConfirmationEmail = (shippingTrackingNumber) => {
+						return new Promise ((resolve, reject) => {
+							// Define url send shipment confirmation
+							const urlEmailShipmentConfirmation = 'http://localhost:3000/email/shippingConfirmation'
+							// Send email using axios
+							axios({
+								method: 'post',
+								url: urlEmailShipmentConfirmation,
+								data: {
+									emailSenderName: 'Feather World Team',
+									customerEmail: index.customer.email,
+									customerOrderId: index.transactionId,
+									customerOrderStatus: $(`#orderStatus${datatable}`).val(),
+									customerFirstName: index.customer.firstName + ' ' + index.customer.middleName,
+									customerLastName: index.customer.lastName,
+									shippingName: index.shippingMethod,
+									shippingTrackingNumber: shippingTrackingNumber,
+									urlInvoiceAttachment: index.invoice,
+									emailText: `Shipping confirmation to customer - ${index.transactionId}`
+								}
+							})
+							.then((response) => {
+								resolve(response.data)
+							})
+							.catch((err) => {
+								reject(err.response)
+							})
+						})
+					}
+					// Change the shipping method into shipped
+					isShipped = () => {
+						return new Promise ((resolve, reject) => {
+							// In order to change status, admin must input the shipping tracking number
+							// Swal for tracking number input
+							swal({
+								title: 'Tracking Number',
+								text: 'Please input the shipping tracking number',
+								content: 'input',
+								button: {
+									text: 'Save'
+								}
+							})
+							.then((input) => {
+								if (input) {
+									// Call the send shipping confirmation email function
+									sendShipmentConfirmationEmail(input)
+									.then(() => {
+										// Call the send email to admin function
+										sendEmailToAdmin()
+										.then((response) => {
+											resolve(response)
+										})
+										.catch((errEmailToAdmin) => {
+											reject(errEmailToAdmin)
+										})
+									})
+									.catch((errShippingConfirmation) => {
+										reject(errShippingConfirmation)
+									})
+								} else {
+									swal.close()
+									resolve(false)
+								}
+							})
+						})
+					}
+					// Change the shipping method into cancelled
+					isCancelled = () => {
+						return new Promise ((resolve, reject) => {
+							// Swal cancel confirmation
+							swal('Are you sure?', 'Click sure if you want to cancel this order', {
+								icon: 'warning',
+								buttons: true,
+								dangerMode: true
+							})
+							.then((willCancel) => {
+								if (willCancel) {
+									// Swal confirmation deleted
+									swal('Success', 'You have successfuly cancelled this order', 'success')
+									.then(() => {
+										resolve(true)
+									})
+									.catch((errSwalDeleted) => {
+										reject(errSwalDeleted)
+									})
+								} else {
+									swal.close()
+									resolve(false)
+								}
+							})
+							.catch((errSwalConfirmation) => {
+								reject(errSwalConfirmation)
+							})
+						})
+					}
 					// Define data for dropdown
 					let data = [ 
 						"Shipped",
@@ -53,30 +206,58 @@ var DefaultDatatableDemo = function () {
 						}
 					})
 					// If === order status from DB, then change the color
-					if ($(`#orderStatus${datatable}`).val() === 'Waiting for Payment') {
+					if ($(`#orderStatus${datatable}`).val().toLowerCase() === 'waiting for payment') {
 						$(`#orderStatus${datatable}`).css('background-color', 'orange').css('color', 'white')
-					} else if ($(`#orderStatus${datatable}`).val() === 'Waiting for Shipment') {
+					} else if ($(`#orderStatus${datatable}`).val().toLowerCase() === 'waiting for shipment') {
 						$(`#orderStatus${datatable}`).css('background-color', 'yellow')
-					} else if ($(`#orderStatus${datatable}`).val() === 'Shipped') {
+					} else if ($(`#orderStatus${datatable}`).val().toLowerCase() === 'shipped') {
 						$(`#orderStatus${datatable}`).css('background-color', 'green').css('color', 'white')
-					} else if ($(`#orderStatus${datatable}`).val() === 'Cancelled') {
+					} else if ($(`#orderStatus${datatable}`).val().toLowerCase() === 'cancelled') {
 						$(`#orderStatus${datatable}`).css('background-color', 'red').css('color', 'white')
 					}
 					// Define request url to change status
 					const urlChangeOrderStatus = `http://localhost:3000/transactions/edit/status/${index._id}`
 					// On order status change, the color also changes
 					$(`#orderStatus${datatable}`).change(() => {
-						if ($(`#orderStatus${datatable}`).val() === 'Waiting for Payment') {
-							$(`#orderStatus${datatable}`).css('background-color', 'orange').css('color', 'white')
-						} else if ($(`#orderStatus${datatable}`).val() === 'Waiting for Shipment') {
-							$(`#orderStatus${datatable}`).css('background-color', 'yellow').css('color', 'black')
-						} else if ($(`#orderStatus${datatable}`).val() === 'Shipped') {
-							$(`#orderStatus${datatable}`).css('background-color', 'green').css('color', 'white')
-						} else if ($(`#orderStatus${datatable}`).val() === 'Cancelled') {
-							$(`#orderStatus${datatable}`).css('background-color', 'red').css('color', 'white')
+						if ($(`#orderStatus${datatable}`).val().toLowerCase() === 'shipped') {
+							// Call isShipped function
+							isShipped()
+							.then((response) => {
+								if (response) {
+									// On order status change, send changes to transactions server
+									axios.post(urlChangeOrderStatus, {status: $(`#orderStatus${datatable}`).val()})
+									.then(() => {
+										// Change the color
+										$(`#orderStatus${datatable}`).css('background-color', 'green').css('color', 'white')
+									})
+									.catch((errChangeColor) => {
+										console.log(errChangeColor)
+									})
+								} else {
+									// Change back the value into before
+									$(`#orderStatus${datatable}`).val(index.status)
+								}
+							})
+						} else if ($(`#orderStatus${datatable}`).val().toLowerCase() === 'cancelled') {
+							// Call isCancelled function
+							isCancelled()
+							.then((response) => {
+								if (response) {
+									// On order status change, send changes to transactions server
+									axios.post(urlChangeOrderStatus, {status: $(`#orderStatus${datatable}`).val()})
+									.then(() => {
+										// Change the color
+										$(`#orderStatus${datatable}`).css('background-color', 'red').css('color', 'white')
+									})
+									.catch((errChangeColor) => {
+										console.log(errChangeColor)
+									})
+								} else {
+									// Change back the value into before
+									$(`#orderStatus${datatable}`).val(index.status)
+								}
+							})
 						}
-						// On order status change, send changes to transactions server
-						axios.post(urlChangeOrderStatus, {status: $(`#orderStatus${datatable}`).val()})
 					})
 
 					// Creating modal
@@ -89,7 +270,7 @@ var DefaultDatatableDemo = function () {
 						totalInvoiceAmmount += parseInt(eachProductForTotal.productId.productPrice)
 					})
 					// Checking if the invoice has already paid or not
-					if (index.status === "Waiting for Payment") {
+					if (index.status.toLowerCase() === "waiting for payment") {
 						$('.modals').append(`
 							<div class="modal fade" id="modal${datatable}" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
 								<div class="modal-dialog modal-dialog-centered modal-lg" role="document">
@@ -104,135 +285,38 @@ var DefaultDatatableDemo = function () {
 												</span>
 											</button>
 										</div>
-										<div class="modal-body">
-											<div class="m-portlet">
-												<div class="m-portlet__body m-portlet__body--no-padding">
-													<div class="m-invoice-2">
-														<div class="m-invoice__wrapper">
-															<div class="m-invoice__head" style="">
-																<div class="m-invoice__container m-invoice__container--centered">
-																	<div class="m-invoice__logo">
-																		<a href="#">
-																			<h1>
-																				INVOICE
-																			</h1>
-																		</a>
-																		<a href="#">
-																			<img  src="../../assets/app/media/img//logos/logo_client_color.png">
-																		</a>
-																	</div>
-																	<span class="m-invoice__desc">
-																		<span>
-																			Jl.Daan Mogot Raya No.45A 2-3, Jakarta Barat 11460 Indonesia <br>
-																			<b>P.</b> (021) 5696 7873 (Hunting)  |  <b>F.</b> (021) 5696 7876 / 77 <br>
-																			<b>Whatsapp.</b> +62 812 8333 7210
-																		</span>
-																	</span>
-																	<div class="m-invoice__items">
-																		<div class="m-invoice__item">
-																			<span class="m-invoice__subtitle">
-																				DATE
-																			</span>
-																			<span class="m-invoice__text">
-																				${invoiceDate}
-																			</span>
-																		</div>
-																		<div class="m-invoice__item">
-																			<span class="m-invoice__subtitle">
-																				INVOICE NO.
-																			</span>
-																			<span class="m-invoice__text">
-																				${index.transactionId}
-																			</span>
-																		</div>
-																		<div class="m-invoice__item">
-																			<span class="m-invoice__subtitle">
-																				INVOICE TO.
-																			</span>
-																			<span class="m-invoice__text">
-																				${index.customer.firstName} 
-																				${index.customer.middleName} 
-																				${index.customer.lastName}
-																				<br>
-																				<strong>Email:</strong><br>${index.customer.email}
-																				<br>
-																				<strong>Phone Number:</strong><br>${index.customer.phoneNumber}
-																			</span>
-																		</div>
-																		<div class="m-invoice__item">
-																			<span class="m-invoice__subtitle">
-																				PAYMENT METHOD
-																			</span>
-																			<span class="m-invoice__text">
-																				${index.paymentMethod}
-																			</span>
-																		</div>
-																	</div>
-																</div>
-															</div>
-															<div class="m-invoice__body m-invoice__body--centered">
-																<div class="table-responsive">
-																	<table class="table">
-																		<thead>
-																			<tr>
-																				<th>
-																					PRODUCT NAME
-																				</th>
-																				<th>
-																					QTY
-																				</th>
-																				<th>
-																					UNIT PRICE
-																				</th>
-																				<th>
-																					TOTAL PRICE
-																				</th>
-																			</tr>
-																		</thead>
-																		<tbody id="invoiceBody${datatable}"></tbody>
-																	</table>
-																</div>
-															</div>
-															<div class="m-invoice__footer">
-																<div class="m-invoice__table  m-invoice__table--centered table-responsive">
-																	<table class="table">
-																		<thead>
-																			<tr>
-																				<th>
-																					SHIPPING ADDRESS
-																				</th>
-																				<th>
-																					SHIPPING COURIER
-																				</th>
-																				<th>
-																					TOTAL AMOUNT
-																				</th>
-																			</tr>
-																		</thead>
-																		<tbody>
-																			<tr>
-																				<td>
-																					${index.deliveryAddress.street} <br>
-																					${index.deliveryAddress.zipCode} <br>
-																					${index.deliveryAddress.city} <br>
-																					${index.deliveryAddress.province} <br>
-																					${index.deliveryAddress.country}
-																				</td>
-																				<td>
-																					${index.shippingMethod}
-																				</td>
-																				<td class="m--font-danger">
-																					${'IDR' + ' ' + totalInvoiceAmmount.toFixed(2).replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,")}
-																				</td>
-																			</tr>
-																		</tbody>
-																	</table>
-																</div>
-															</div>
-														</div>
-													</div>
-												</div>
-											</div>
+										<div class="modal-body" style="">
+											<img src="${index.invoice}" alt="" style="display: block; margin-left: auto; margin-right: auto; width: 100%"/>
+										</div>
+										<div class="modal-footer">
+											<button type="button" class="btn btn-secondary" data-dismiss="modal">
+												Close
+											</button>
+											<button type="button" class="btn btn-primary">
+												Print
+											</button>
+										</div>
+									</div>
+								</div>
+							</div>
+						`)
+					} else if (index.status.toLowerCase() === 'cancelled') {
+						$('.modals').append(`
+							<div class="modal fade" id="modal${datatable}" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+								<div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+									<div class="modal-content">
+										<div class="modal-header">
+											<h5 class="modal-title" id="exampleModalLongTitle">
+												<b>Invoice Status:</b> <br> <h5 style="color: red">Cancelled</h5>
+											</h5>
+											<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+												<span aria-hidden="true">
+													&times;
+												</span>
+											</button>
+										</div>
+										<div class="modal-body" style="">
+											<img src="${index.invoice}" alt="" style="display: block; margin-left: auto; margin-right: auto; width: 100%"/>
 										</div>
 										<div class="modal-footer">
 											<button type="button" class="btn btn-secondary" data-dismiss="modal">
@@ -253,7 +337,7 @@ var DefaultDatatableDemo = function () {
 									<div class="modal-content">
 										<div class="modal-header">
 											<h5 class="modal-title" id="exampleModalLongTitle">
-												<b>Invoice Status:</b> <br> <img src="../../assets/img/Cloudxier-receipt-icon-02-01q.png" style="max-width: 200px">
+												<b>Invoice Status:</b> <br> <img src="../../assets/img/Cloudxier-receipt-icon-02-01.png" style="max-width: 200px">
 											</h5>
 											<button type="button" class="close" data-dismiss="modal" aria-label="Close">
 												<span aria-hidden="true">
@@ -262,134 +346,7 @@ var DefaultDatatableDemo = function () {
 											</button>
 										</div>
 										<div class="modal-body">
-											<div class="m-portlet">
-												<div class="m-portlet__body m-portlet__body--no-padding">
-													<div class="m-invoice-2">
-														<div class="m-invoice__wrapper">
-															<div class="m-invoice__head" style="">
-																<div class="m-invoice__container m-invoice__container--centered">
-																	<div class="m-invoice__logo">
-																		<a href="#">
-																			<h1>
-																				INVOICE
-																			</h1>
-																		</a>
-																		<a href="#">
-																			<img  src="../../assets/app/media/img//logos/logo_client_color.png">
-																		</a>
-																	</div>
-																	<span class="m-invoice__desc">
-																		<span>
-																			Jl.Daan Mogot Raya No.45A 2-3, Jakarta Barat 11460 Indonesia <br>
-																			<b>P.</b> (021) 5696 7873 (Hunting)  |  <b>F.</b> (021) 5696 7876 / 77 <br>
-																			<b>Whatsapp.</b> +62 812 8333 7210
-																		</span>
-																	</span>
-																	<div class="m-invoice__items">
-																		<div class="m-invoice__item">
-																			<span class="m-invoice__subtitle">
-																				DATE
-																			</span>
-																			<span class="m-invoice__text">
-																				${invoiceDate}
-																			</span>
-																		</div>
-																		<div class="m-invoice__item">
-																			<span class="m-invoice__subtitle">
-																				INVOICE NO.
-																			</span>
-																			<span class="m-invoice__text">
-																				${index.transactionId}
-																			</span>
-																		</div>
-																		<div class="m-invoice__item">
-																			<span class="m-invoice__subtitle">
-																				INVOICE TO.
-																			</span>
-																			<span class="m-invoice__text">
-																				${index.customer.firstName} 
-																				${index.customer.middleName} 
-																				${index.customer.lastName}
-																				<br>
-																				<strong>Email:</strong><br>${index.customer.email}
-																				<br>
-																				<strong>Phone Number:</strong><br>${index.customer.phoneNumber}
-																			</span>
-																		</div>
-																		<div class="m-invoice__item">
-																			<span class="m-invoice__subtitle">
-																				PAYMENT METHOD
-																			</span>
-																			<span class="m-invoice__text">
-																				${index.paymentMethod}
-																			</span>
-																		</div>
-																	</div>
-																</div>
-															</div>
-															<div class="m-invoice__body m-invoice__body--centered">
-																<div class="table-responsive">
-																	<table class="table">
-																		<thead>
-																			<tr>
-																				<th>
-																					PRODUCT NAME
-																				</th>
-																				<th>
-																					QTY
-																				</th>
-																				<th>
-																					UNIT PRICE
-																				</th>
-																				<th>
-																					TOTAL PRICE
-																				</th>
-																			</tr>
-																		</thead>
-																		<tbody id="invoiceBody${datatable}"></tbody>
-																	</table>
-																</div>
-															</div>
-															<div class="m-invoice__footer">
-																<div class="m-invoice__table  m-invoice__table--centered table-responsive">
-																	<table class="table">
-																		<thead>
-																			<tr>
-																				<th>
-																					SHIPPING ADDRESS
-																				</th>
-																				<th>
-																					SHIPPING COURIER
-																				</th>
-																				<th>
-																					TOTAL AMOUNT
-																				</th>
-																			</tr>
-																		</thead>
-																		<tbody>
-																			<tr>
-																				<td>
-																					${index.deliveryAddress.street} <br>
-																					${index.deliveryAddress.zipCode} <br>
-																					${index.deliveryAddress.city} <br>
-																					${index.deliveryAddress.province} <br>
-																					${index.deliveryAddress.country}
-																				</td>
-																				<td>
-																					${index.shippingMethod}
-																				</td>
-																				<td class="m--font-danger">
-																					${'IDR' + ' ' + totalInvoiceAmmount.toFixed(2).replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,")}
-																				</td>
-																			</tr>
-																		</tbody>
-																	</table>
-																</div>
-															</div>
-														</div>
-													</div>
-												</div>
-											</div>
+											<img src="${index.invoice}" alt="" style="display: block; margin-left: auto; margin-right: auto; width: 100%"/>
 										</div>
 										<div class="modal-footer">
 											<button type="button" class="btn btn-secondary" data-dismiss="modal">
@@ -404,28 +361,6 @@ var DefaultDatatableDemo = function () {
 							</div>
 						`)
 					}
-					// Append invoice items
-					index.products.forEach((dataProducts) => {
-						// Get total price
-						let totalPrice = parseInt(dataProducts.buyingQty) * parseInt(dataProducts.productId.productPrice)
-						// Append invoice body
-						$(`#invoiceBody${datatable}`).append(`
-							<tr>
-								<td>
-									${dataProducts.productId.productName}
-								</td>
-								<td>
-									${dataProducts.buyingQty}
-								</td>
-								<td>
-									${'IDR' + ' ' + dataProducts.productId.productPrice.toFixed(2).replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,")}
-								</td>
-								<td class="m--font-danger">
-									${'IDR' + ' ' + totalPrice.toFixed(2).replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,")}
-								</td>
-							</tr>
-						`)
-					})
 				}
 			},
 
@@ -449,7 +384,7 @@ var DefaultDatatableDemo = function () {
 				title: "Order Date",
 				template: function (row, index, datatable) {
 					let date = new Date(row.createdAt)
-					return `${date.getDate()}-${date.getMonth()}-${date.getFullYear()} | ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`
+					return `${date.getDate()}-${date.getMonth()}-${date.getFullYear()}`
 				}
 			}, {
 				field: "status",
@@ -482,9 +417,6 @@ var DefaultDatatableDemo = function () {
 							data-toggle="modal"
 							data-target="#modal${index}">\
 							<i class="la la-align-justify"></i>\
-						</a>\
-						<a id='btnDeleteOrder${index}' href="#" class="m-portlet__nav-link btn m-btn m-btn--hover-danger m-btn--icon m-btn--icon-only m-btn--pill" title="Delete">\
-							<i class="la la-trash"></i>\
 						</a>\
 					`;
 				}
