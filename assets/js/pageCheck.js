@@ -1,26 +1,39 @@
 $(document).ready(() => {
 
-	// Get user email from localStorage
-	const objUserEmail = JSON.parse(localStorage.getItem('userEmail'))
-	// Check if user has logged in or not
-	if (objUserEmail) {
-		// Check credentials
-		let checkCredentialsUrl = 'http://localhost:3000/auth/check'
-		axios.post(checkCredentialsUrl, objUserEmail)
-		.then((response) => {
-			console.log(response.data)
-			// Set logged in user data in localStorage
-			localStorage.setItem('dataUsers', JSON.stringify(response.data))
-		})
-		.catch((err) => {
-			swal("Alert!", "Please log in first!", "warning").then(() => {
-				window.location.replace('page-login.html')
+	// Firebase check signed in user
+	firebaseCheckSignedInUser = () => {
+		// Loading overlay start
+		$.LoadingOverlay('show')
+		return new Promise ((resolve, reject) => {
+			// Call firebase on auth state changed
+			firebase.auth().onAuthStateChanged((user) => {
+				// Check if user exist
+				if (user) {
+					// Check if user is admin
+					if (user.email === 'featherworld.it@gmail.com') {
+						// Loading overlay stop
+						$.LoadingOverlay('hide')
+						resolve(user)
+					} else {
+						// Loading overlay stop
+						$.LoadingOverlay('hide')
+						swal('Forbidden', 'Only admin can open this page', 'warning')
+						.then(() => {
+							// Sign out user
+							firebaseSignOut()
+						})
+					}
+				} else {
+					// Loading overlay stop
+					$.LoadingOverlay('hide')
+					swal('No user', 'Please sign in with admin account to open this page', 'warning')
+					resolve(false)
+				}
 			})
 		})
-	} else {
-		swal("Alert!", "Please log in first!", "warning").then(() => {
-			window.location.replace('page-login.html')
-		})
 	}
+
+	// On load
+	firebaseCheckSignedInUser()
 
 })

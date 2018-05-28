@@ -329,7 +329,7 @@ $(document).ready(() => {
 					// Set options for shipping method
 					$('#shippingMethod').append(`
 						<label class="m-checkbox">
-							<input name="method${dataFilter._id}" type="checkbox" value='${dataFilter._id}'>
+							<input name="method${dataFilter._id}" type="checkbox" value='${dataFilter._id}' checked>
 							${dataFilter.shippingName}
 							<span></span>
 						</label>

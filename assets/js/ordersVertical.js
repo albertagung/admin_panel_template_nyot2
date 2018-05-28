@@ -41,7 +41,6 @@ var DefaultDatatableDemo = function () {
 
 			rows: {
 				afterTemplate: function (row, index, datatable) {
-					console.log(index)
 					// Send email every change in order status (to admin)
 					sendEmailToAdmin = () => {
 						return new Promise ((resolve, reject) => {
@@ -168,7 +167,7 @@ var DefaultDatatableDemo = function () {
 							// Swal cancel confirmation
 							swal('Are you sure?', 'Click sure if you want to cancel this order', {
 								icon: 'warning',
-								buttons: true,
+								buttons: ['Cancel', 'Sure'],
 								dangerMode: true
 							})
 							.then((willCancel) => {
